@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_main"
+    app:startDestination="@+id/bluetoothActivationFragment">
+
+    <fragment
+        android:id="@+id/bluetoothActivationFragment"
+        android:name="com.michaelfotiadis.heartbeat.ui.main.fragment.activation.BluetoothActivationFragment"
+        android:label="Bluetooth Activation"
+        tools:layout="@layout/bluetooth_activation_fragment">
+        <argument
+            android:name="isRoot"
+            android:defaultValue="true"
+            app:argType="boolean" />
+        <action
+            android:id="@+id/action_bluetoothActivationFragment_to_bondedDevicesFragment"
+            app:destination="@id/bondedDevicesFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/bondedDevicesFragment"
+        android:name="com.michaelfotiadis.heartbeat.ui.main.fragment.bonded.BondedDevicesFragment"
+        android:label="Paired Devices"
+        tools:layout="@layout/fragment_bonded_devices">
+        <argument
+            android:name="isRoot"
+            android:defaultValue="true"
+            app:argType="boolean" />
+        <action
+            android:id="@+id/action_bondedDevicesFragment_to_locationPermissionFragment"
+            app:destination="@id/locationPermissionFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/locationPermissionFragment"
+        android:name="com.michaelfotiadis.heartbeat.ui.main.fragment.location.LocationPermissionFragment"
+        android:label="Location Permission"
+        tools:layout="@layout/fragment_location_permission">
+        <argument
+            android:name="isRoot"
+            android:defaultValue="false"
+            app:argType="boolean" />
+    </fragment>
+
+</navigation>

@@ -7,11 +7,12 @@ allprojects {
                 compileSdkVersion: 29
         ]
         roomVersion = "2.2.0"
+        lifecycleVersion = "2.1.0"
         daggerVersion = '2.16'
         glideVersion = '4.10.0'
         retrofitVersion = '2.6.2'
         leakCanaryVersion = "1.6.3"
         stethoVersion = "1.5.1"
-        paging_version = "2.1.0"
+        navVersion = "2.1.0"
     }
 }

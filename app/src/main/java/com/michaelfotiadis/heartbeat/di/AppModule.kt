@@ -9,7 +9,9 @@ import com.michaelfotiadis.heartbeat.core.features.FeatureFlagProvider
 import com.michaelfotiadis.heartbeat.core.initialize.AppInitializer
 import com.michaelfotiadis.heartbeat.core.leak.LeakManager
 import com.michaelfotiadis.heartbeat.core.logger.AppLogger
+import com.michaelfotiadis.heartbeat.core.permission.PermissionsHandler
 import com.michaelfotiadis.heartbeat.core.scheduler.ExecutionThreads
+import com.michaelfotiadis.heartbeat.core.toast.ToastShower
 import dagger.Module
 import dagger.Provides
 import javax.inject.Singleton
@@ -45,13 +47,24 @@ internal class AppModule {
     }
 
     @Provides
+    fun providesToastShower(): ToastShower {
+        return ToastShower()
+    }
+
+    @Provides
     @Singleton
     fun providesAppInitializer(
         featureFlagProvider: FeatureFlagProvider,
         leakManager: LeakManager,
+        toastShower: ToastShower,
         appLogger: AppLogger
     ): AppInitializer {
-        return AppInitializer(featureFlagProvider, leakManager, appLogger)
+        return AppInitializer(featureFlagProvider, leakManager, toastShower, appLogger)
+    }
+
+    @Provides
+    fun providesPermissionsHandler(): PermissionsHandler {
+        return PermissionsHandler()
     }
 
     @Provides

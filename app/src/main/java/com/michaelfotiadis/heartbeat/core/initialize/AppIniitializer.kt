@@ -5,20 +5,39 @@ import com.facebook.stetho.Stetho
 import com.michaelfotiadis.heartbeat.core.features.FeatureFlagProvider
 import com.michaelfotiadis.heartbeat.core.leak.LeakManager
 import com.michaelfotiadis.heartbeat.core.logger.AppLogger
+import com.michaelfotiadis.heartbeat.core.toast.ToastShower
+import java.util.concurrent.atomic.AtomicBoolean
 
 class AppInitializer(
     private val featureFlagProvider: FeatureFlagProvider,
     private val leakManager: LeakManager,
+    private val toastShower: ToastShower,
     private val appLogger: AppLogger
 ) {
 
+    private var isInitialized = AtomicBoolean(false)
+
     fun startup(application: Application) {
+
+        check(!isInitialized.get()) { "Attempted to initialize app more than once" }
         if (leakManager.initLeakCanary(application)) {
             appLogger.activate()
-            if (featureFlagProvider.isDebugEnabled) {
-                Stetho.initializeWithDefaults(application)
-                appLogger.get().d("Stethoscope initialized")
-            }
+            initToasty()
+            initStetho(application)
+            isInitialized.set(true)
         }
     }
+
+    private fun initStetho(application: Application) {
+        if (featureFlagProvider.isDebugEnabled) {
+            Stetho.initializeWithDefaults(application)
+            appLogger.get().d("Stetho initialized")
+        }
+    }
+
+    private fun initToasty() {
+        toastShower.initialize()
+        appLogger.get().d("Toasty initialized")
+    }
+
 }

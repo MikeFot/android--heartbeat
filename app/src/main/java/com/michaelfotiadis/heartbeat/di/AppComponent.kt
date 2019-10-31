@@ -13,7 +13,8 @@ import javax.inject.Singleton
     modules = [
         AndroidSupportInjectionModule::class,
         ActivityBuilderModule::class,
-        AppModule::class
+        AppModule::class,
+        BluetoothModule::class
     ]
 )
 interface AppComponent : AndroidInjector<HeartBeatApplication> {
