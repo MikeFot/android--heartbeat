@@ -1,4 +1,4 @@
-package com.michaelfotiadis.heartbeat.bluetooth
+package com.michaelfotiadis.heartbeat.bluetooth.model
 
 enum class BondState(val code: Int) {
     BOND_NONE(10),

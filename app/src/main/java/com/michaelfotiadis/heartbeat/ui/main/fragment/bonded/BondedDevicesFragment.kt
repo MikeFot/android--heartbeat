@@ -26,9 +26,7 @@ internal class BondedDevicesFragment : BaseNavFragment() {
         ViewModelProviders.of(this, factory).get(BondedDevicesViewModel::class.java)
     }
 
-    private val adapter: BluetoothDevicesAdapter by lazy {
-        BluetoothDevicesAdapter()
-    }
+    private lateinit var adapter: BluetoothDevicesAdapter
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -36,6 +34,11 @@ internal class BondedDevicesFragment : BaseNavFragment() {
         savedInstanceState: Bundle?
     ): View? {
         return inflater.inflate(R.layout.fragment_bonded_devices, container, false)
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        adapter.listener = null
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -46,6 +49,7 @@ internal class BondedDevicesFragment : BaseNavFragment() {
     }
 
     private fun bindViews() {
+        adapter = BluetoothDevicesAdapter()
         adapter.listener = viewModel::onDeviceSelected
         bonded_devices_recycler_view.adapter = adapter
         bonded_devices_recycler_view.addItemDecoration(
@@ -75,11 +79,17 @@ internal class BondedDevicesFragment : BaseNavFragment() {
     }
 
     private fun navigateToLocationPermission() {
-        navController.navigate(BondedDevicesFragmentDirections.actionBondedDevicesFragmentToLocationPermissionFragment())
+        navController.navigate(
+            BondedDevicesFragmentDirections.actionBondedDevicesFragmentToLocationPermissionFragment()
+        )
     }
 
     private fun navigateToPairToDevice(uiBondedDevice: UiBondedDevice) {
-
+        navController.navigate(
+            BondedDevicesFragmentDirections.actionBondedDevicesFragmentToPairDeviceFragment(
+                macAddress = uiBondedDevice.address
+            )
+        )
     }
 
 }

@@ -1,30 +1,30 @@
 package com.michaelfotiadis.heartbeat.ui.main.fragment.bonded
 
-import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.Transformations
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.viewModelScope
-import com.michaelfotiadis.heartbeat.bluetooth.BluetoothWrapper
+import com.michaelfotiadis.heartbeat.bluetooth.BluetoothStatusProvider
 import com.michaelfotiadis.heartbeat.core.livedata.SingleLiveEvent
+import com.michaelfotiadis.heartbeat.service.BluetoothServiceDispatcher
 import com.michaelfotiadis.heartbeat.ui.main.fragment.bonded.model.UiBondedDevice
 import com.michaelfotiadis.heartbeat.ui.main.fragment.bonded.model.UiBondedDeviceMapper
-import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 class BondedDevicesViewModel(
-    private val bluetoothWrapper: BluetoothWrapper,
+    private val bluetoothStatusProvider: BluetoothStatusProvider,
+    private val intentDispatcher: BluetoothServiceDispatcher,
     private val uiBondedDeviceMapper: UiBondedDeviceMapper
 ) : ViewModel() {
 
-    val devicesLiveData = MutableLiveData<List<UiBondedDevice>>()
+    val devicesLiveData: LiveData<List<UiBondedDevice>> =
+        Transformations.map(bluetoothStatusProvider.bondedDevicesLiveData) { bondedDevices ->
+            uiBondedDeviceMapper.map(bondedDevices)
+        }
     val actionLiveData = SingleLiveEvent<Action>()
 
     fun refreshBondedDevices() {
-        viewModelScope.launch {
-            val devices = bluetoothWrapper.getBondedDevices()
-            val uiDevices = uiBondedDeviceMapper.map(devices)
-            devicesLiveData.postValue(uiDevices)
-        }
+        intentDispatcher.refreshBondedDevices()
     }
 
     fun onDeviceSelected(uiBondedDevice: UiBondedDevice) {
@@ -42,11 +42,16 @@ sealed class Action {
 }
 
 class BondedDevicesViewModelFactory @Inject constructor(
-    private val bluetoothWrapper: BluetoothWrapper,
+    private val bluetoothStatusProvider: BluetoothStatusProvider,
+    private val intentDispatcher: BluetoothServiceDispatcher,
     private val uiBondedDeviceMapper: UiBondedDeviceMapper
 ) : ViewModelProvider.Factory {
     override fun <T : ViewModel?> create(modelClass: Class<T>): T {
         @Suppress("UNCHECKED_CAST")
-        return BondedDevicesViewModel(bluetoothWrapper, uiBondedDeviceMapper) as T
+        return BondedDevicesViewModel(
+            bluetoothStatusProvider,
+            intentDispatcher,
+            uiBondedDeviceMapper
+        ) as T
     }
 }

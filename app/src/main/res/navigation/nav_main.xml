@@ -10,13 +10,11 @@
         android:name="com.michaelfotiadis.heartbeat.ui.main.fragment.activation.BluetoothActivationFragment"
         android:label="Bluetooth Activation"
         tools:layout="@layout/bluetooth_activation_fragment">
-        <argument
-            android:name="isRoot"
-            android:defaultValue="true"
-            app:argType="boolean" />
         <action
             android:id="@+id/action_bluetoothActivationFragment_to_bondedDevicesFragment"
-            app:destination="@id/bondedDevicesFragment" />
+            app:destination="@id/bondedDevicesFragment"
+            app:popUpTo="@id/bluetoothActivationFragment"
+            app:popUpToInclusive="true" />
     </fragment>
 
     <fragment
@@ -24,24 +22,30 @@
         android:name="com.michaelfotiadis.heartbeat.ui.main.fragment.bonded.BondedDevicesFragment"
         android:label="Paired Devices"
         tools:layout="@layout/fragment_bonded_devices">
-        <argument
-            android:name="isRoot"
-            android:defaultValue="true"
-            app:argType="boolean" />
         <action
             android:id="@+id/action_bondedDevicesFragment_to_locationPermissionFragment"
-            app:destination="@id/locationPermissionFragment" />
+            app:destination="@id/locationPermissionFragment"
+            app:popUpTo="@id/bondedDevicesFragment"
+            app:popUpToInclusive="true" />
+        <action
+            android:id="@+id/action_bondedDevicesFragment_to_pairDeviceFragment"
+            app:destination="@id/pairDeviceFragment" />
     </fragment>
 
     <fragment
         android:id="@+id/locationPermissionFragment"
         android:name="com.michaelfotiadis.heartbeat.ui.main.fragment.location.LocationPermissionFragment"
         android:label="Location Permission"
-        tools:layout="@layout/fragment_location_permission">
+        tools:layout="@layout/fragment_location_permission" />
+
+    <fragment
+        android:id="@+id/pairDeviceFragment"
+        android:name="com.michaelfotiadis.heartbeat.ui.main.fragment.pair.PairDeviceFragment"
+        android:label="fragment_pair_device"
+        tools:layout="@layout/fragment_pair_device">
         <argument
-            android:name="isRoot"
-            android:defaultValue="false"
-            app:argType="boolean" />
+            android:name="macAddress"
+            app:argType="string" />
     </fragment>
 
 </navigation>

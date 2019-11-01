@@ -1,16 +1,12 @@
 package com.michaelfotiadis.heartbeat.core.leak
 
 import android.app.Application
-import com.squareup.leakcanary.LeakCanary
+import javax.inject.Inject
 
-class LeakManager {
+class LeakManager @Inject constructor() {
 
+    @Suppress("UNUSED_PARAMETER", "unused")
     fun initLeakCanary(application: Application): Boolean {
-        return if (LeakCanary.isInAnalyzerProcess(application)) {
-            false
-        } else {
-            LeakCanary.install(application)
-            true
-        }
+        return true
     }
 }

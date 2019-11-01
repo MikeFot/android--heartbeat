@@ -27,10 +27,16 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
-
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
     configurations {
         ktlint
     }
+}
+
+androidExtensions {
+    experimental = true
 }
 
 dependencies {
@@ -76,9 +82,7 @@ dependencies {
     implementation "com.facebook.stetho:stetho:$stethoVersion"
     implementation "com.facebook.stetho:stetho-okhttp3:$stethoVersion"
 
-    debugImplementation "com.squareup.leakcanary:leakcanary-android:$leakCanaryVersion"
-    releaseImplementation "com.squareup.leakcanary:leakcanary-android-no-op:$leakCanaryVersion"
-    debugImplementation "com.squareup.leakcanary:leakcanary-support-fragment:$leakCanaryVersion"
+    debugImplementation 'com.squareup.leakcanary:leakcanary-android:2.0-beta-3'
 
     ktlint "com.pinterest:ktlint:0.34.2"
 }

@@ -4,11 +4,11 @@ import android.app.Application
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothManager
 import android.content.Context
+import com.michaelfotiadis.heartbeat.bluetooth.BluetoothStatusProvider
 import com.michaelfotiadis.heartbeat.bluetooth.BluetoothWrapper
 import com.michaelfotiadis.heartbeat.core.logger.AppLogger
 import dagger.Module
 import dagger.Provides
-import kotlinx.coroutines.Dispatchers
 import javax.inject.Singleton
 
 @Module
@@ -21,7 +21,11 @@ internal class BluetoothModule {
         appLogger: AppLogger,
         bluetoothAdapter: BluetoothAdapter
     ): BluetoothWrapper {
-        return BluetoothWrapper(application, Dispatchers.IO, appLogger, bluetoothAdapter)
+        return BluetoothWrapper(
+            application,
+            appLogger,
+            bluetoothAdapter
+        )
     }
 
     @Provides
@@ -32,5 +36,11 @@ internal class BluetoothModule {
     @Provides
     fun providesBluetoothAdapter(bluetoothManager: BluetoothManager): BluetoothAdapter {
         return bluetoothManager.adapter
+    }
+
+    @Provides
+    @Singleton
+    fun providesBluetoothStatusProvider(): BluetoothStatusProvider {
+        return BluetoothStatusProvider()
     }
 }

@@ -1,8 +1,8 @@
 package com.michaelfotiadis.heartbeat.ui.main.fragment.bonded.model
 
 import android.bluetooth.BluetoothDevice
-import com.michaelfotiadis.heartbeat.bluetooth.DeviceType
-import com.michaelfotiadis.heartbeat.bluetooth.BondState
+import com.michaelfotiadis.heartbeat.bluetooth.model.DeviceType
+import com.michaelfotiadis.heartbeat.bluetooth.model.BondState
 import javax.inject.Inject
 
 class UiBondedDeviceMapper @Inject constructor() {

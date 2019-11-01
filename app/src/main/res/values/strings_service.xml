@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="bluetooth_notification_id" translatable="false">com.michaelfotiadis.heartbeat.bluetooth_notification</string>
+    <string name="bluetooth_channel_id" translatable="false">com.michaelfotiadis.heartbeat.bluetooth_channel</string>
+    <string name="bluetooth_channel_name" translatable="false">Bluetooth Heartbeat Service</string>
+    <string name="bluetooth_channel_description" translatable="false">Notifications for Heartbeat Sensor</string>
+
+    <string name="service_name">MI Band 2 Heartbeat Sensor</string>
+    <string name="service_started">Bluetooth service started</string>
+    <string name="service_bluetooth_off">Bluetooth turned off</string>
+    <string name="service_scan_start">Scanning for devices…</string>
+    <string name="service_scan_stop">Stopped scanning…</string>
+    <string name="service_connection_start">Attempting connection with \'%s\'</string>
+    <string name="service_connection_failed">Failed connecting to \'%s\'</string>
+    <string name="service_connection_success">Connected to \'%s\'</string>
+    <string name="service_connection_stop">Disconnected from \'%s\'</string>
+</resources>

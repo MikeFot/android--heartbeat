@@ -21,5 +21,4 @@ class HeartBeatApplication : DaggerApplication() {
             .application(this)
             .build()
     }
-
 }

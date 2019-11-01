@@ -1,4 +1,4 @@
-package com.michaelfotiadis.heartbeat.bluetooth
+package com.michaelfotiadis.heartbeat.bluetooth.model
 
 enum class DeviceType(val code: Int) {
     DEVICE_TYPE_UNKNOWN(0),
