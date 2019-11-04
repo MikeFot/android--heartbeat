@@ -9,5 +9,4 @@ internal abstract class BaseNavFragment : DaggerFragment() {
     val navController: NavController by lazy {
         findNavController()
     }
-
 }

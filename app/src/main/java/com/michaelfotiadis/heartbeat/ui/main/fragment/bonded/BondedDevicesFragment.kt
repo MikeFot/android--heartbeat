@@ -9,9 +9,11 @@ import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.DividerItemDecoration
 import com.michaelfotiadis.heartbeat.R
 import com.michaelfotiadis.heartbeat.ui.base.BaseNavFragment
-import com.michaelfotiadis.heartbeat.ui.main.fragment.bonded.adapter.BluetoothDevicesAdapter
+import com.michaelfotiadis.heartbeat.ui.main.fragment.bonded.viewmodel.BondedDevicesViewModel
+import com.michaelfotiadis.heartbeat.ui.main.fragment.bonded.adapter.BluetoothBondedDevicesAdapter
 import com.michaelfotiadis.heartbeat.ui.main.fragment.bonded.model.UiBondedDevice
-import com.michaelfotiadis.heartbeat.ui.main.fragment.bonded.model.UiBondedDeviceMapper
+import com.michaelfotiadis.heartbeat.ui.main.fragment.bonded.viewmodel.Action
+import com.michaelfotiadis.heartbeat.ui.main.fragment.bonded.viewmodel.BondedDevicesViewModelFactory
 import kotlinx.android.synthetic.main.fragment_bonded_devices.*
 import javax.inject.Inject
 
@@ -19,14 +21,12 @@ internal class BondedDevicesFragment : BaseNavFragment() {
 
     @Inject
     lateinit var factory: BondedDevicesViewModelFactory
-    @Inject
-    lateinit var uiBondedDeviceMapper: UiBondedDeviceMapper
 
     private val viewModel: BondedDevicesViewModel by lazy {
         ViewModelProviders.of(this, factory).get(BondedDevicesViewModel::class.java)
     }
 
-    private lateinit var adapter: BluetoothDevicesAdapter
+    private lateinit var adapter: BluetoothBondedDevicesAdapter
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -37,8 +37,8 @@ internal class BondedDevicesFragment : BaseNavFragment() {
     }
 
     override fun onDestroyView() {
-        super.onDestroyView()
         adapter.listener = null
+        super.onDestroyView()
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -49,7 +49,7 @@ internal class BondedDevicesFragment : BaseNavFragment() {
     }
 
     private fun bindViews() {
-        adapter = BluetoothDevicesAdapter()
+        adapter = BluetoothBondedDevicesAdapter()
         adapter.listener = viewModel::onDeviceSelected
         bonded_devices_recycler_view.adapter = adapter
         bonded_devices_recycler_view.addItemDecoration(
@@ -91,5 +91,4 @@ internal class BondedDevicesFragment : BaseNavFragment() {
             )
         )
     }
-
 }

@@ -4,6 +4,7 @@ import com.michaelfotiadis.heartbeat.ui.main.fragment.activation.BluetoothActiva
 import com.michaelfotiadis.heartbeat.ui.main.fragment.bonded.BondedDevicesFragment
 import com.michaelfotiadis.heartbeat.ui.main.fragment.location.LocationPermissionFragment
 import com.michaelfotiadis.heartbeat.ui.main.fragment.pair.PairDeviceFragment
+import com.michaelfotiadis.heartbeat.ui.main.fragment.scan.ScanDevicesFragment
 import dagger.Module
 import dagger.android.ContributesAndroidInjector
 
@@ -21,4 +22,7 @@ internal abstract class MainFragmentBuilderModule {
 
     @ContributesAndroidInjector
     abstract fun pairDeviceFragment(): PairDeviceFragment
+
+    @ContributesAndroidInjector
+    abstract fun scanFragment(): ScanDevicesFragment
 }

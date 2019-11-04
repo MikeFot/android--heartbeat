@@ -21,7 +21,6 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <androidx.recyclerview.widget.RecyclerView
-
         android:id="@+id/bonded_devices_recycler_view"
         android:name=".ui.main.fragment.bonded.BondedDevicesFragment"
         android:layout_width="match_parent"

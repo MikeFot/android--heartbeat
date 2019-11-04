@@ -9,6 +9,7 @@ import com.michaelfotiadis.heartbeat.core.permission.PermissionsHandler
 import com.michaelfotiadis.heartbeat.core.toast.ToastShower
 import com.michaelfotiadis.heartbeat.ui.base.BaseNavFragment
 import javax.inject.Inject
+import kotlinx.android.synthetic.main.fragment_location_permission.*
 
 internal class LocationPermissionFragment : BaseNavFragment() {
 
@@ -23,7 +24,8 @@ internal class LocationPermissionFragment : BaseNavFragment() {
     lateinit var toastShower: ToastShower
 
     override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
+        inflater: LayoutInflater,
+        container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
         return inflater.inflate(R.layout.fragment_location_permission, container, false)
@@ -31,6 +33,14 @@ internal class LocationPermissionFragment : BaseNavFragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        location_button.setOnClickListener {
+            askForPermission()
+        }
+        askForPermission()
+    }
+
+    private fun askForPermission() {
         permissionsHandler.askForLocationPermission(requireActivity(),
             onGranted = { moveToNext() },
             onDenied = { endFlow() }
@@ -38,11 +48,12 @@ internal class LocationPermissionFragment : BaseNavFragment() {
     }
 
     private fun moveToNext() {
-        toastShower.info(requireContext(), "Move to Next")
+        navController.navigate(
+            LocationPermissionFragmentDirections.actionLocationPermissionFragmentToScanFragment()
+        )
     }
 
     private fun endFlow() {
-        toastShower.info(requireContext(), "End Flow")
+        toastShower.info(requireContext(), "We cannot continue without location permission")
     }
-
 }

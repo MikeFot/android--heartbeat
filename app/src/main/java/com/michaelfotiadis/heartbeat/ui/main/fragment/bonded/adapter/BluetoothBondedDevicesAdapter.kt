@@ -1,6 +1,5 @@
 package com.michaelfotiadis.heartbeat.ui.main.fragment.bonded.adapter
 
-
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -11,8 +10,8 @@ import androidx.recyclerview.widget.RecyclerView
 import com.michaelfotiadis.heartbeat.R
 import com.michaelfotiadis.heartbeat.ui.main.fragment.bonded.model.UiBondedDevice
 
-class BluetoothDevicesAdapter :
-    ListAdapter<UiBondedDevice, BluetoothDevicesAdapter.ViewHolder>(
+class BluetoothBondedDevicesAdapter :
+    ListAdapter<UiBondedDevice, BluetoothBondedDevicesAdapter.ViewHolder>(
         DiffCallback()
     ) {
 
@@ -52,5 +51,4 @@ class BluetoothDevicesAdapter :
             return oldItem == newItem
         }
     }
-
 }

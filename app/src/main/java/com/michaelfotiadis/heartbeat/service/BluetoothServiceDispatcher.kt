@@ -20,7 +20,7 @@ class BluetoothServiceDispatcher(
 
     fun startService() {
         getDefaultIntent().also { intent ->
-            intent.action = BluetoothService.ACTION_START
+            intent.action = BluetoothActions.ACTION_START
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 context.startForegroundService(intent)
             } else {
@@ -31,36 +31,50 @@ class BluetoothServiceDispatcher(
 
     fun stopService() {
         getDefaultIntent().also { intent ->
-            intent.action = BluetoothService.ACTION_STOP
+            intent.action = BluetoothActions.ACTION_STOP
             context.startService(intent)
         }
     }
 
     fun checkBluetoothConnection() {
         getDefaultIntent().also { intent ->
-            intent.action = BluetoothService.ACTION_CHECK_CONNECTION
+            intent.action = BluetoothActions.ACTION_CHECK_CONNECTION
             context.startService(intent)
         }
     }
 
     fun refreshBondedDevices() {
         getDefaultIntent().also { intent ->
-            intent.action = BluetoothService.ACTION_REFRESH_BONDED_DEVICES
+            intent.action = BluetoothActions.ACTION_REFRESH_BONDED_DEVICES
             context.startService(intent)
         }
     }
 
     fun askToEnableBluetooth() {
         getDefaultIntent().also { intent ->
-            intent.action = BluetoothService.ACTION_ENABLE_BLUETOOTH
+            intent.action = BluetoothActions.ACTION_ENABLE_BLUETOOTH
             context.startService(intent)
         }
     }
 
     fun connectToMacAddress(mac: String) {
         getDefaultIntent().also { intent ->
-            intent.action = BluetoothService.ACTION_CONNECT_TO_MAC
-            intent.putExtra(BluetoothService.EXTRA_MAC_ADDRESS, mac)
+            intent.action = BluetoothActions.ACTION_CONNECT_TO_MAC
+            intent.putExtra(BluetoothActions.EXTRA_MAC_ADDRESS, mac)
+            context.startService(intent)
+        }
+    }
+
+    fun checkSerial() {
+        getDefaultIntent().also { intent ->
+            intent.action = BluetoothActions.ACTION_CHECK_HEART_SERVICE
+            context.startService(intent)
+        }
+    }
+
+    fun scanForDevices() {
+        getDefaultIntent().also { intent ->
+            intent.action = BluetoothActions.ACTION_SCAN_DEVICES
             context.startService(intent)
         }
     }

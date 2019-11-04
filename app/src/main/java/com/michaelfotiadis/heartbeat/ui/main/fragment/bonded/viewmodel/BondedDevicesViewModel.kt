@@ -1,4 +1,4 @@
-package com.michaelfotiadis.heartbeat.ui.main.fragment.bonded
+package com.michaelfotiadis.heartbeat.ui.main.fragment.bonded.viewmodel
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.Transformations
@@ -12,15 +12,16 @@ import com.michaelfotiadis.heartbeat.ui.main.fragment.bonded.model.UiBondedDevic
 import javax.inject.Inject
 
 class BondedDevicesViewModel(
-    private val bluetoothStatusProvider: BluetoothStatusProvider,
+    bluetoothStatusProvider: BluetoothStatusProvider,
     private val intentDispatcher: BluetoothServiceDispatcher,
-    private val uiBondedDeviceMapper: UiBondedDeviceMapper
+    uiBondedDeviceMapper: UiBondedDeviceMapper
 ) : ViewModel() {
 
     val devicesLiveData: LiveData<List<UiBondedDevice>> =
-        Transformations.map(bluetoothStatusProvider.bondedDevicesLiveData) { bondedDevices ->
-            uiBondedDeviceMapper.map(bondedDevices)
-        }
+        Transformations.map(
+            bluetoothStatusProvider.bondedDevicesLiveData,
+            uiBondedDeviceMapper::map
+        )
     val actionLiveData = SingleLiveEvent<Action>()
 
     fun refreshBondedDevices() {
@@ -28,7 +29,11 @@ class BondedDevicesViewModel(
     }
 
     fun onDeviceSelected(uiBondedDevice: UiBondedDevice) {
-        actionLiveData.postValue(Action.ConnectToDevice(uiBondedDevice))
+        actionLiveData.postValue(
+            Action.ConnectToDevice(
+                uiBondedDevice
+            )
+        )
     }
 
     fun onMissingDeviceClicked() {

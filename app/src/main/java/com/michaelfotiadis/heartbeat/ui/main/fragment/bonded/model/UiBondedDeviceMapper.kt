@@ -1,8 +1,9 @@
 package com.michaelfotiadis.heartbeat.ui.main.fragment.bonded.model
 
 import android.bluetooth.BluetoothDevice
-import com.michaelfotiadis.heartbeat.bluetooth.model.DeviceType
+import com.clj.fastble.data.BleDevice
 import com.michaelfotiadis.heartbeat.bluetooth.model.BondState
+import com.michaelfotiadis.heartbeat.bluetooth.model.DeviceType
 import javax.inject.Inject
 
 class UiBondedDeviceMapper @Inject constructor() {
@@ -12,7 +13,7 @@ class UiBondedDeviceMapper @Inject constructor() {
         bluetoothDevices.forEach { device ->
             uiItems.add(
                 UiBondedDevice(
-                    name = device.name,
+                    name = device.name ?: "Unknown Device",
                     address = device.address,
                     bondedStatus = BondState.fromCode(device.bondState),
                     deviceType = DeviceType.fromCode(device.type)

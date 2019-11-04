@@ -36,7 +36,6 @@ class PermissionsHandler {
             override fun onPermissionDenied(response: PermissionDeniedResponse?) {
                 onDenied.invoke()
             }
-
         }
 
         Dexter.withActivity(activity)
@@ -49,5 +48,4 @@ class PermissionsHandler {
             )
             .check()
     }
-
 }

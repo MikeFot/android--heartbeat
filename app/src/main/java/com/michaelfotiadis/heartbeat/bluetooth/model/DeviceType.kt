@@ -6,7 +6,6 @@ enum class DeviceType(val code: Int) {
     DEVICE_TYPE_LE(2),
     DEVICE_TYPE_DUAL(3);
 
-
     companion object {
         fun fromCode(code: Int): DeviceType {
             values().forEach { value ->
@@ -17,5 +16,4 @@ enum class DeviceType(val code: Int) {
             return DEVICE_TYPE_UNKNOWN
         }
     }
-
 }

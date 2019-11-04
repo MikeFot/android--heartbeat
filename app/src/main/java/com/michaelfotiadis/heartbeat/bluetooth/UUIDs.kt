@@ -10,50 +10,49 @@ internal object UUIDs {
 
     val SERVICE = UUID.fromString("0000fee0-0000-1000-8000-00805f9b34fb")
 
-    //Custom service 3 components
+    // Custom service 3 components
     val CUSTOM_SERVICE_FEE1 = UUID.fromString("0000fee1-0000-1000-8000-00805f9b34fb")
     val CUSTOM_SERVICE_AUTH_CHARACTERISTIC = UUID.fromString("00000009-0000-3512-2118-0009af100700")
     val CUSTOM_SERVICE_AUTH_DESCRIPTOR = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb")
 
-    //Device information profile
+    // Device information profile
     val DEVICE_INFORMATION_SERVICE = UUID.fromString("0000180a-0000-1000-8000-00805f9b34fb")
     val SERIAL_NUMBER = UUID.fromString("00002a25-0000-1000-8000-00805f9b34fb")
     val HARDWARE_REVISION_STRING = UUID.fromString("00002a27-0000-1000-8000-00805f9b34fb")
     val SOFTWARE_REVISION_STRING = UUID.fromString("00002a28-0000-1000-8000-00805f9b34fb")
 
-    //Generic access profile
+    // Generic access profile
     val GENERIC_ACCESS_SERVICE = UUID.fromString("00001800-0000-1000-8000-00805f9b34fb")
     val DEVICE_NAME_CHARACTERISTIC = UUID.fromString("00002a00-0000-1000-8000-00805f9b34fb")
     val APPEARANCE_CHARACTERISTIC = UUID.fromString("00002a01-0000-1000-8000-00805f9b34fb")
     val PERIPHERAL_PREFERRED_CONNECTION_CHARACTERISTIC =
         UUID.fromString("00002a04-0000-1000-8000-00805f9b34fb")
 
-    //Generic attribute profile
+    // Generic attribute profile
     val GENERIC_ATTRIBUTE_SERVICE = UUID.fromString("00001801-0000-1000-8000-00805f9b34fb")
     val SERVICE_CHANGED_CHARACTERISTIC = UUID.fromString("00002a05-0000-1000-8000-00805f9b34fb")
     val SERVICE_CHANGED_DESCRIPTOR = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb")
 
-    //Space left for custom service 00001530
+    // Space left for custom service 00001530
 
-    //Alert notification profile
+    // Alert notification profile
     val ALERT_NOTIFICATION_SERVICE = UUID.fromString("00001811-0000-1000-8000-00805f9b34fb")
     val NEW_ALERT_CHARACTERISTIC = UUID.fromString("00002a46-0000-1000-8000-00805f9b34fb")
     val ALERT_NOTIFICATION_CONTROL_POINT = UUID.fromString("00002a44-0000-1000-8000-00805f9b34fb")
     val ALERT_NOTIFICATION_CONTROL_POINT_DESCRIPTOR =
         UUID.fromString("00002902-0000-1000-8000-00805f9b34fb")
 
-    //Immediate alert profile
+    // Immediate alert profile
     val IMMEDIATE_ALERT_SERVICE = UUID.fromString("00001802-0000-1000-8000-00805f9b34fb")
     val ALERT_LEVEL_CHARACTERISTIC = UUID.fromString("00002a06-0000-1000-8000-00805f9b34fb")
 
-    //Heart rate monitoring profile
+    // Heart rate monitoring profile
     val HEART_RATE_SERVICE = UUID.fromString("0000180d-0000-1000-8000-00805f9b34fb")
     val HEART_RATE_MEASUREMENT_CHARACTERISTIC =
         UUID.fromString("00002a37-0000-1000-8000-00805f9b34fb")
     val HEART_RATE_MEASURMENT_DESCRIPTOR = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb")
     val HEART_RATE_CONTROL_POINT_CHARACTERISTIC =
         UUID.fromString("00002a39-0000-1000-8000-00805f9b34fb")
-
 
     /*----------------UUID strings for the switch statements----------*/
     val DEVICE_INFORMATION_SERVICE_STRING = "0000180a-0000-1000-8000-00805f9b34fb"

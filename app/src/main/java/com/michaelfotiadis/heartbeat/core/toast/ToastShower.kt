@@ -19,5 +19,4 @@ class ToastShower {
     fun info(context: Context, @StringRes messageResId: Int) {
         Toasty.info(context, messageResId).show()
     }
-
 }

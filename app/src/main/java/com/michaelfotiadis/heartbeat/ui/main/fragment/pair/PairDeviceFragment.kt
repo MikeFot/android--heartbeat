@@ -1,6 +1,5 @@
 package com.michaelfotiadis.heartbeat.ui.main.fragment.pair
 
-
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -11,10 +10,12 @@ import androidx.navigation.fragment.navArgs
 import com.michaelfotiadis.heartbeat.R
 import com.michaelfotiadis.heartbeat.core.logger.AppLogger
 import com.michaelfotiadis.heartbeat.ui.base.BaseNavFragment
+import com.michaelfotiadis.heartbeat.ui.main.fragment.pair.viewmodel.Action
+import com.michaelfotiadis.heartbeat.ui.main.fragment.pair.viewmodel.PairDeviceViewModel
+import com.michaelfotiadis.heartbeat.ui.main.fragment.pair.viewmodel.PairDeviceViewModelFactory
 import javax.inject.Inject
 
 internal class PairDeviceFragment : BaseNavFragment() {
-
 
     @Inject
     lateinit var factory: PairDeviceViewModelFactory
@@ -23,12 +24,15 @@ internal class PairDeviceFragment : BaseNavFragment() {
 
     val args: PairDeviceFragmentArgs by navArgs()
 
+    private lateinit var binder: ViewBinder
+
     private val viewModel: PairDeviceViewModel by lazy {
         ViewModelProviders.of(this, factory).get(PairDeviceViewModel::class.java)
     }
 
     override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
+        inflater: LayoutInflater,
+        container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
         return inflater.inflate(R.layout.fragment_pair_device, container, false)
@@ -36,9 +40,45 @@ internal class PairDeviceFragment : BaseNavFragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        viewModel.connectionResultLiveData.observe(viewLifecycleOwner, Observer { result ->
-            appLogger.get().d("Connection result $result")
-        })
+        binder = ViewBinder(view)
+        binder.callbacks = object : ViewBinder.Callbacks {
+            override fun onRetry() {
+                attemptConnection()
+            }
+
+            override fun onCancel() {
+                abortFlow()
+            }
+        }
+        viewModel.connectionResultLiveData.observe(
+            viewLifecycleOwner,
+            Observer(this::processResult)
+        )
+        attemptConnection()
+    }
+
+    private fun abortFlow() {
+        navController.navigate(
+            PairDeviceFragmentDirections.actionPairDeviceFragmentToBondedDevicesFragment()
+        )
+    }
+
+    private fun attemptConnection() {
         viewModel.connect(args.macAddress)
+    }
+
+    private fun processResult(action: Action) {
+        when (action) {
+            Action.Idle -> {
+                // NOOP
+            }
+            Action.Started -> binder.showProgress()
+            is Action.Failed -> binder.showFailed(action.message)
+            is Action.Disconnected -> binder.showDisconnected()
+            is Action.Connected -> {
+                binder.showConnected()
+                viewModel.checkSerial()
+            }
+        }
     }
 }

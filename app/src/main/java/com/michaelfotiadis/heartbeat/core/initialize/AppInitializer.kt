@@ -38,5 +38,4 @@ class AppInitializer(
         toastShower.initialize()
         appLogger.get().d("Toasty initialized")
     }
-
 }

@@ -45,5 +45,4 @@ class BluetoothActivationViewModelFactory @Inject constructor(
         @Suppress("UNCHECKED_CAST")
         return BluetoothActivationViewModel(bluetoothStatusProvider, intentDispatcher) as T
     }
-
 }

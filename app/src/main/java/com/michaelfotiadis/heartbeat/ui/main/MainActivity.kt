@@ -14,9 +14,8 @@ import com.michaelfotiadis.heartbeat.R
 import com.michaelfotiadis.heartbeat.service.BluetoothService
 import com.michaelfotiadis.heartbeat.service.BluetoothServiceDispatcher
 import dagger.android.support.DaggerAppCompatActivity
-import kotlinx.android.synthetic.main.main_activity.*
 import javax.inject.Inject
-
+import kotlinx.android.synthetic.main.main_activity.*
 
 class MainActivity : DaggerAppCompatActivity(), ServiceConnection {
 

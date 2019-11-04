@@ -10,24 +10,23 @@ import android.content.IntentFilter
 import android.os.Binder
 import android.os.IBinder
 import androidx.lifecycle.LifecycleService
+import com.clj.fastble.exception.OtherException
 import com.michaelfotiadis.heartbeat.R
 import com.michaelfotiadis.heartbeat.bluetooth.BluetoothStatusProvider
 import com.michaelfotiadis.heartbeat.bluetooth.BluetoothWrapper
+import com.michaelfotiadis.heartbeat.bluetooth.model.ConnectionStatus
 import com.michaelfotiadis.heartbeat.core.logger.AppLogger
 import dagger.android.AndroidInjection
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 class BluetoothService : LifecycleService() {
 
     companion object {
-        const val ACTION_START = "action.bluetooth_start"
-        const val ACTION_STOP = "action.bluetooth_stop"
-        const val ACTION_CHECK_CONNECTION = "action.check_connection"
-        const val ACTION_REFRESH_BONDED_DEVICES = "action.refresh_bonded_devices"
-        const val ACTION_ENABLE_BLUETOOTH = "action.enable_bluetooth"
-        const val ACTION_CONNECT_TO_MAC = "action.connect_to_mac"
-        const val EXTRA_MAC_ADDRESS = "extra.mac_address"
         private const val NOTIFICATION_ID = R.integer.bluetooth_service_id
     }
 
@@ -76,7 +75,11 @@ class BluetoothService : LifecycleService() {
 
     override fun onDestroy() {
         bluetoothWrapper.cancelScan()
-        // bluetoothWrapper.disconnect()
+        bluetoothStatusProvider.getConnectedDevice()?.let { bleDevice ->
+            appLogger.get().d("Disconnected Device")
+            bluetoothWrapper.disconnect(bleDevice)
+        }
+
         unregisterReceiver(receiver)
         try {
             scope.cancel()
@@ -102,14 +105,24 @@ class BluetoothService : LifecycleService() {
 
     override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
         when (intent.action) {
-            ACTION_START -> handleActionStart()
-            ACTION_STOP -> handleActionStop()
-            ACTION_CHECK_CONNECTION -> checkConnection()
-            ACTION_REFRESH_BONDED_DEVICES -> refreshBondedDevices()
-            ACTION_ENABLE_BLUETOOTH -> enableBluetooth()
-            ACTION_CONNECT_TO_MAC -> connectToMac(intent.getStringExtra(EXTRA_MAC_ADDRESS) ?: "")
+            BluetoothActions.ACTION_START -> handleActionStart()
+            BluetoothActions.ACTION_STOP -> handleActionStop()
+            BluetoothActions.ACTION_CHECK_CONNECTION -> checkConnection()
+            BluetoothActions.ACTION_REFRESH_BONDED_DEVICES -> refreshBondedDevices()
+            BluetoothActions.ACTION_ENABLE_BLUETOOTH -> enableBluetooth()
+            BluetoothActions.ACTION_CONNECT_TO_MAC -> connectToMac(
+                intent.getStringExtra(
+                    BluetoothActions.EXTRA_MAC_ADDRESS
+                ) ?: ""
+            )
+            BluetoothActions.ACTION_CHECK_HEART_SERVICE -> checkDeviceHeartService()
+            BluetoothActions.ACTION_SCAN_DEVICES -> scanForDevices()
         }
         return super.onStartCommand(intent, flags, startId)
+    }
+
+    private fun updateNotification(notification: Notification) {
+        notificationManager.notify(NOTIFICATION_ID, notification)
     }
 
     private fun handleActionStop() {
@@ -131,8 +144,18 @@ class BluetoothService : LifecycleService() {
 
     private fun connectToMac(mac: String) {
         scope.launch {
-            bluetoothWrapper.connectToMac(mac) { connectionResult ->
-                appLogger.get("SERVICE").d("Connection result $connectionResult")
+            try {
+                bluetoothWrapper.connectToMac(
+                    mac,
+                    bluetoothStatusProvider.connectionStatusLiveData::postValue
+                )
+            } catch (exception: IllegalArgumentException) {
+                bluetoothStatusProvider.connectionStatusLiveData.postValue(
+                    ConnectionStatus.Failed(
+                        bleDevice = null,
+                        exception = OtherException(exception.message)
+                    )
+                )
             }
         }
     }
@@ -157,8 +180,17 @@ class BluetoothService : LifecycleService() {
         }
     }
 
-    private fun updateNotification(notification: Notification) {
-        notificationManager.notify(NOTIFICATION_ID, notification)
+    private fun checkDeviceHeartService() {
+        scope.launch {
+            bluetoothStatusProvider.getConnectedDevice()?.let { device ->
+                bluetoothWrapper.checkHeartServiceExists(device)
+            }
+        }
+    }
+
+    private fun scanForDevices() {
+        scope.launch {
+            bluetoothWrapper.scan(bluetoothStatusProvider.scanStatusLiveData::postValue)
+        }
     }
 }
-

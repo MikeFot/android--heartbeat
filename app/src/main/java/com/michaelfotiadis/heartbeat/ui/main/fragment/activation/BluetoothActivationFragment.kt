@@ -9,8 +9,8 @@ import androidx.lifecycle.ViewModelProviders
 import com.michaelfotiadis.heartbeat.R
 import com.michaelfotiadis.heartbeat.core.toast.ToastShower
 import com.michaelfotiadis.heartbeat.ui.base.BaseNavFragment
-import kotlinx.android.synthetic.main.bluetooth_activation_fragment.*
 import javax.inject.Inject
+import kotlinx.android.synthetic.main.bluetooth_activation_fragment.*
 
 internal class BluetoothActivationFragment : BaseNavFragment() {
 
