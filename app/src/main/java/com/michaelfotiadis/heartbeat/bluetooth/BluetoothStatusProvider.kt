@@ -3,8 +3,8 @@ package com.michaelfotiadis.heartbeat.bluetooth
 import android.bluetooth.BluetoothDevice
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Transformations
-import com.clj.fastble.data.BleDevice
 import com.michaelfotiadis.heartbeat.bluetooth.model.ConnectionStatus
+import com.michaelfotiadis.heartbeat.bluetooth.model.HeartRateStatus
 import com.michaelfotiadis.heartbeat.bluetooth.model.ScanStatus
 
 class BluetoothStatusProvider {
@@ -20,12 +20,5 @@ class BluetoothStatusProvider {
             null
         }
     }
-
-    fun isConnected(): Boolean {
-        return getConnectedDevice() != null
-    }
-
-    fun getConnectedDevice(): BleDevice? {
-        return connectedDevice.value
-    }
+    val heartRateStatus = MutableLiveData<HeartRateStatus>()
 }

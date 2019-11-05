@@ -65,7 +65,7 @@ class BluetoothServiceDispatcher(
         }
     }
 
-    fun checkSerial() {
+    fun checkInfo() {
         getDefaultIntent().also { intent ->
             intent.action = BluetoothActions.ACTION_CHECK_HEART_SERVICE
             context.startService(intent)
@@ -80,4 +80,10 @@ class BluetoothServiceDispatcher(
     }
 
     private fun getDefaultIntent() = Intent(context, BluetoothService::class.java)
+    fun disconnectDevice() {
+        getDefaultIntent().also { intent ->
+            intent.action = BluetoothActions.ACTION_DISCONNECT_DEVICE
+            context.startService(intent)
+        }
+    }
 }

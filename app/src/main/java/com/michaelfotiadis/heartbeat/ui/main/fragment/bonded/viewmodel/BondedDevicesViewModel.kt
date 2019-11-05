@@ -39,6 +39,10 @@ class BondedDevicesViewModel(
     fun onMissingDeviceClicked() {
         actionLiveData.postValue(Action.MoveToLocationPermission)
     }
+
+    fun disconnectDevice() {
+        intentDispatcher.disconnectDevice()
+    }
 }
 
 sealed class Action {

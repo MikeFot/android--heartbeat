@@ -25,6 +25,24 @@ class ServiceNotificationFactory @Inject constructor() {
             .build()
     }
 
+    fun getConnectedToDevice(context: Context, deviceName: String): Notification {
+        return getDefaultBuilder(context)
+            .setContentText(context.getString(R.string.service_connection_success, deviceName))
+            .build()
+    }
+
+    fun getDisconnectedFromDevice(context: Context, deviceName: String): Notification {
+        return getDefaultBuilder(context)
+            .setContentText(context.getString(R.string.service_connection_stop, deviceName))
+            .build()
+    }
+
+    fun getHeartRateNotification(context: Context, heartRate: Int): Notification {
+        return getDefaultBuilder(context)
+            .setContentText(context.getString(R.string.service_heart_rate, heartRate))
+            .build()
+    }
+
     private fun getDefaultBuilder(context: Context): NotificationCompat.Builder {
         return NotificationCompat.Builder(
             context,

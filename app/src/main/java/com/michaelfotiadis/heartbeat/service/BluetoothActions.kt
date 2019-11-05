@@ -10,5 +10,6 @@ object BluetoothActions {
     const val EXTRA_MAC_ADDRESS = "extra.mac_address"
     const val ACTION_CHECK_HEART_SERVICE = "action.check_heart_service"
     const val ACTION_SCAN_DEVICES = "action.scan_devices"
+    const val ACTION_DISCONNECT_DEVICE = "action.disconnect_device"
 
 }

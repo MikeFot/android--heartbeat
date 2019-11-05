@@ -15,4 +15,5 @@
     <string name="service_connection_failed">Failed connecting to \'%s\'</string>
     <string name="service_connection_success">Connected to \'%s\'</string>
     <string name="service_connection_stop">Disconnected from \'%s\'</string>
+    <string name="service_heart_rate">%d Heart Rate</string>
 </resources>

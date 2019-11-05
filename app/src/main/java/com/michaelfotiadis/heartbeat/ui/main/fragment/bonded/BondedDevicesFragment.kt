@@ -48,6 +48,11 @@ internal class BondedDevicesFragment : BaseNavFragment() {
         viewModel.refreshBondedDevices()
     }
 
+    override fun onResume() {
+        super.onResume()
+        viewModel.disconnectDevice()
+    }
+
     private fun bindViews() {
         adapter = BluetoothBondedDevicesAdapter()
         adapter.listener = viewModel::onDeviceSelected

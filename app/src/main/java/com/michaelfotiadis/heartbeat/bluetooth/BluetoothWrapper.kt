@@ -9,15 +9,18 @@ import android.content.Intent
 import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
 import com.clj.fastble.BleManager
 import com.clj.fastble.callback.BleGattCallback
-import com.clj.fastble.callback.BleReadCallback
+import com.clj.fastble.callback.BleNotifyCallback
 import com.clj.fastble.callback.BleScanCallback
+import com.clj.fastble.callback.BleWriteCallback
 import com.clj.fastble.data.BleDevice
 import com.clj.fastble.data.BleScanState
 import com.clj.fastble.exception.BleException
 import com.clj.fastble.scan.BleScanRuleConfig
 import com.michaelfotiadis.heartbeat.bluetooth.model.ConnectionStatus
+import com.michaelfotiadis.heartbeat.bluetooth.model.HeartRateStatus
 import com.michaelfotiadis.heartbeat.bluetooth.model.ScanStatus
 import com.michaelfotiadis.heartbeat.core.logger.AppLogger
+import java.util.*
 import java.util.concurrent.TimeUnit
 
 private const val TAG = "BLE"
@@ -127,19 +130,114 @@ class BluetoothWrapper(
         })
     }
 
-    fun checkHeartServiceExists(bleDevice: BleDevice) {
-        bleManager.read(bleDevice,
+    fun pingHeartRateControl(bleDevice: BleDevice) {
+        bleManager.write(bleDevice,
             UUIDs.HEART_RATE_SERVICE.toString(),
-            UUIDs.HEART_RATE_MEASUREMENT_CHARACTERISTIC.toString(),
-            object : BleReadCallback() {
-                override fun onReadSuccess(data: ByteArray?) {
-                    appLogger.get(TAG).d("DATA: $data")
+            UUIDs.HEART_RATE_CONTROL_POINT_CHARACTERISTIC.toString(),
+            MiMessages.HMC_PING,
+            object : BleWriteCallback() {
+                override fun onWriteSuccess(current: Int, total: Int, justWrite: ByteArray?) {
+                    appLogger.get(TAG).d("Ping Write successful")
                 }
 
-                override fun onReadFailure(exception: BleException?) {
-                    appLogger.get(TAG).e("EX: ${exception?.description}")
+                override fun onWriteFailure(exception: BleException?) {
+                    appLogger.get(TAG).e("Ping Write failed")
                 }
             })
+    }
+
+    fun stopHeartRate(bleDevice: BleDevice, callback: () -> Unit) {
+        bleManager.write(bleDevice,
+            UUIDs.HEART_RATE_SERVICE.toString(),
+            UUIDs.HEART_RATE_CONTROL_POINT_CHARACTERISTIC.toString(),
+            byteArrayOf(21, 2, 1),
+            object : BleWriteCallback() {
+                override fun onWriteSuccess(current: Int, total: Int, justWrite: ByteArray?) {
+                    appLogger.get(TAG).d("Stop Heart Rate Write successful")
+                    callback.invoke()
+                }
+
+                override fun onWriteFailure(exception: BleException?) {
+                    appLogger.get(TAG).e("Stop Heart Rate Write failed: ${exception?.description}")
+                    callback.invoke()
+                }
+            })
+    }
+
+    fun askForSingleHeartRate(bleDevice: BleDevice, callback: (HeartRateStatus) -> Unit) {
+
+        bleManager.write(bleDevice,
+            UUIDs.HEART_RATE_SERVICE.toString(),
+            UUIDs.HEART_RATE_CONTROL_POINT_CHARACTERISTIC.toString(),
+            MiMessages.HMC_SINGLE_MEASUREMENT,
+            object : BleWriteCallback() {
+                override fun onWriteSuccess(current: Int, total: Int, justWrite: ByteArray?) {
+                    appLogger.get(TAG).d("Single Heart Rate Write successful")
+                    startNotifyHeartService(bleDevice, callback)
+                }
+
+                override fun onWriteFailure(exception: BleException?) {
+                    appLogger.get(TAG)
+                        .e("Single Heart Rate Write failed: ${exception?.description}")
+                    callback.invoke(HeartRateStatus.Failed(exception))
+                    stopNotifyHeartService(bleDevice)
+                }
+            })
+    }
+
+    fun askForContinuousHeartRate(bleDevice: BleDevice, callback: (HeartRateStatus) -> Unit) {
+        bleManager.write(bleDevice,
+            UUIDs.HEART_RATE_SERVICE.toString(),
+            UUIDs.HEART_RATE_CONTROL_POINT_CHARACTERISTIC.toString(),
+            MiMessages.HMC_CONTINUOUS_MEASUREMENT,
+            object : BleWriteCallback() {
+                override fun onWriteSuccess(current: Int, total: Int, justWrite: ByteArray?) {
+                    appLogger.get(TAG).d("Continuous Heart Rate Write successful")
+                    startNotifyHeartService(bleDevice, callback)
+                }
+
+                override fun onWriteFailure(exception: BleException?) {
+                    appLogger.get(TAG).e("Continuous Heart Rate Write failed")
+                    callback.invoke(HeartRateStatus.Failed(exception))
+                    stopNotifyHeartService(bleDevice)
+                }
+            })
+    }
+
+    private fun startNotifyHeartService(bleDevice: BleDevice, callback: (HeartRateStatus) -> Unit) {
+        bleManager.notify(
+            bleDevice,
+            UUIDs.HEART_RATE_SERVICE.toString(),
+            UUIDs.HEART_RATE_MEASUREMENT_CHARACTERISTIC.toString(),
+            object : BleNotifyCallback() {
+                override fun onCharacteristicChanged(data: ByteArray?) {
+                    val message = Arrays.toString(data) ?: ""
+                    appLogger.get(TAG).d("DATA: $message")
+                    if (data != null && data.size >= 2) {
+                        val heartRate = data[1]
+                        callback.invoke(HeartRateStatus.Updated(heartRate.toInt()))
+                    }
+                }
+
+                override fun onNotifyFailure(exception: BleException?) {
+                    appLogger.get(TAG).e("EX: ${exception?.description}")
+                    callback.invoke(HeartRateStatus.Failed(exception))
+                }
+
+                override fun onNotifySuccess() {
+                    appLogger.get(TAG).d("Notify success")
+                    callback.invoke(HeartRateStatus.Success)
+                }
+            })
+    }
+
+    fun stopNotifyHeartService(bleDevice: BleDevice) {
+        bleManager.stopNotify(
+            bleDevice,
+            UUIDs.HEART_RATE_SERVICE.toString(),
+            UUIDs.HEART_RATE_MEASUREMENT_CHARACTERISTIC.toString()
+        )
+        appLogger.get(TAG).d("Stop Notify")
     }
 
     fun cancelScan() {

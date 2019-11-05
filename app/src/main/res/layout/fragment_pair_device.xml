@@ -15,5 +15,8 @@
 
     <include layout="@layout/includable_pair_failed" />
 
+    <include layout="@layout/includable_pair_heart_success" />
+
+    <include layout="@layout/includable_pair_heart_updated" />
 
 </ViewFlipper>

@@ -13,6 +13,8 @@ class ViewBinder(view: View) {
         private const val INDEX_CONNECTED = 1
         private const val INDEX_DISCONNECTED = 2
         private const val INDEX_FAILED = 3
+        private const val INDEX_HEART_SUCCESS = 4
+        private const val INDEX_HEART_UPDATED = 5
     }
 
     private val viewFlipper: ViewFlipper = view.findViewById(R.id.pair_view_flipper)
@@ -21,6 +23,7 @@ class ViewBinder(view: View) {
     private val disconnectedRetryButton: Button = view.findViewById(R.id.pair_disconnected_retry)
     private val disconnectedCancelButton: Button = view.findViewById(R.id.pair_disconnected_cancel)
     private val failedDescriptionText: TextView = view.findViewById(R.id.pair_failed_description)
+    private val heartRateValueText: TextView = view.findViewById(R.id.pair_heart_updated_value)
 
     var callbacks: Callbacks? = null
 
@@ -64,5 +67,16 @@ class ViewBinder(view: View) {
     fun showFailed(message: String) {
         viewFlipper.displayedChild = INDEX_FAILED
         failedDescriptionText.text = message
+    }
+
+    fun showHeartRateSuccess() {
+        viewFlipper.displayedChild = INDEX_HEART_SUCCESS
+    }
+
+    fun showHeartRateUpdated(heartRate: Int) {
+        if (viewFlipper.displayedChild != INDEX_HEART_UPDATED) {
+            viewFlipper.displayedChild = INDEX_HEART_UPDATED
+        }
+        heartRateValueText.text = heartRate.toString()
     }
 }

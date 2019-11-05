@@ -10,17 +10,23 @@ import android.content.IntentFilter
 import android.os.Binder
 import android.os.IBinder
 import androidx.lifecycle.LifecycleService
+import androidx.lifecycle.Observer
+import com.clj.fastble.data.BleDevice
 import com.clj.fastble.exception.OtherException
 import com.michaelfotiadis.heartbeat.R
 import com.michaelfotiadis.heartbeat.bluetooth.BluetoothStatusProvider
 import com.michaelfotiadis.heartbeat.bluetooth.BluetoothWrapper
 import com.michaelfotiadis.heartbeat.bluetooth.model.ConnectionStatus
+import com.michaelfotiadis.heartbeat.bluetooth.model.HeartRateStatus
 import com.michaelfotiadis.heartbeat.core.logger.AppLogger
 import dagger.android.AndroidInjection
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.ObsoleteCoroutinesApi
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.channels.ReceiveChannel
+import kotlinx.coroutines.channels.ticker
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -45,6 +51,8 @@ class BluetoothService : LifecycleService() {
     // Binder given to clients
     private val binder = LocalBinder()
     private val scope = CoroutineScope(Job())
+    private var connectedDevice: BleDevice? = null
+    private var tickerChannel: ReceiveChannel<Unit>? = null
 
     private val receiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -71,15 +79,52 @@ class BluetoothService : LifecycleService() {
         AndroidInjection.inject(this)
         super.onCreate()
         registerReceiver(receiver, IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED))
+
+        bluetoothStatusProvider.connectedDevice.observe(
+            this,
+            Observer(this::updateConnectedDevice)
+        )
+        bluetoothStatusProvider.heartRateStatus.observe(
+            this,
+            Observer(this::updateHeartRateNotification)
+        )
+    }
+
+    private fun updateHeartRateNotification(heartRateStatus: HeartRateStatus?) {
+        if (heartRateStatus is HeartRateStatus.Updated) {
+            updateNotification(
+                notificationFactory.getHeartRateNotification(
+                    this,
+                    heartRateStatus.heartRate
+                )
+            )
+        }
+    }
+
+    private fun updateConnectedDevice(bleDevice: BleDevice?) {
+        if (bleDevice != null) {
+            updateNotification(
+                notificationFactory.getConnectedToDevice(
+                    this,
+                    bleDevice.name ?: ""
+                )
+            )
+        } else {
+            stopTicker()
+            if (connectedDevice != null) {
+                updateNotification(
+                    notificationFactory.getDisconnectedFromDevice(
+                        this,
+                        connectedDevice!!.name ?: ""
+                    )
+                )
+            }
+        }
+        connectedDevice = bleDevice
     }
 
     override fun onDestroy() {
-        bluetoothWrapper.cancelScan()
-        bluetoothStatusProvider.getConnectedDevice()?.let { bleDevice ->
-            appLogger.get().d("Disconnected Device")
-            bluetoothWrapper.disconnect(bleDevice)
-        }
-
+        disconnectDevice()
         unregisterReceiver(receiver)
         try {
             scope.cancel()
@@ -87,6 +132,19 @@ class BluetoothService : LifecycleService() {
             appLogger.get().e(exception)
         }
         super.onDestroy()
+    }
+
+    private fun disconnectDevice() {
+        bluetoothWrapper.cancelScan()
+        stopTicker()
+        connectedDevice?.let { bleDevice ->
+            appLogger.get().d("Disconnected Device")
+            bluetoothWrapper.stopHeartRate(bleDevice) {
+                bluetoothWrapper.stopNotifyHeartService(bleDevice)
+                bluetoothWrapper.disconnect(bleDevice)
+                bluetoothStatusProvider.connectionStatusLiveData.postValue(null)
+            }
+        }
     }
 
     override fun onBind(intent: Intent): IBinder {
@@ -115,8 +173,9 @@ class BluetoothService : LifecycleService() {
                     BluetoothActions.EXTRA_MAC_ADDRESS
                 ) ?: ""
             )
-            BluetoothActions.ACTION_CHECK_HEART_SERVICE -> checkDeviceHeartService()
+            BluetoothActions.ACTION_CHECK_HEART_SERVICE -> monitorHeartRate()
             BluetoothActions.ACTION_SCAN_DEVICES -> scanForDevices()
+            BluetoothActions.ACTION_DISCONNECT_DEVICE -> disconnectDevice()
         }
         return super.onStartCommand(intent, flags, startId)
     }
@@ -146,9 +205,8 @@ class BluetoothService : LifecycleService() {
         scope.launch {
             try {
                 bluetoothWrapper.connectToMac(
-                    mac,
-                    bluetoothStatusProvider.connectionStatusLiveData::postValue
-                )
+                    mac
+                ) { bluetoothStatusProvider.connectionStatusLiveData.postValue(it) }
             } catch (exception: IllegalArgumentException) {
                 bluetoothStatusProvider.connectionStatusLiveData.postValue(
                     ConnectionStatus.Failed(
@@ -182,10 +240,59 @@ class BluetoothService : LifecycleService() {
 
     private fun checkDeviceHeartService() {
         scope.launch {
-            bluetoothStatusProvider.getConnectedDevice()?.let { device ->
-                bluetoothWrapper.checkHeartServiceExists(device)
+            val device = connectedDevice
+            if (device != null) {
+                bluetoothWrapper.askForSingleHeartRate(device) { heartRateStatus ->
+                    when (heartRateStatus) {
+                        is HeartRateStatus.Updated, is HeartRateStatus.Failed -> bluetoothWrapper.stopNotifyHeartService(
+                            device
+                        )
+                        else -> {
+                            // NOOP
+                        }
+                    }
+                    bluetoothStatusProvider.heartRateStatus.postValue(heartRateStatus)
+                }
+            } else {
+                appLogger.get().e("Null connected device")
             }
         }
+    }
+
+    private fun monitorHeartRate() {
+        scope.launch {
+            val device = connectedDevice
+            if (device != null) {
+                bluetoothWrapper.askForContinuousHeartRate(device) { heartRateStatus ->
+                    @Suppress("EXPERIMENTAL_API_USAGE")
+                    when (heartRateStatus) {
+                        HeartRateStatus.Success -> startTicker(device)
+                        is HeartRateStatus.Failed -> stopTicker()
+                        else -> {
+                            // NOOP
+                        }
+                    }
+                    bluetoothStatusProvider.heartRateStatus.postValue(heartRateStatus)
+                }
+
+            }
+        }
+    }
+
+    @ObsoleteCoroutinesApi
+    private fun startTicker(device: BleDevice) {
+        scope.launch {
+            stopTicker()
+            tickerChannel = ticker(delayMillis = 10_000, initialDelayMillis = 10_000)
+            for (event in tickerChannel!!) {
+                bluetoothWrapper.pingHeartRateControl(device)
+            }
+        }
+    }
+
+    private fun stopTicker() {
+        tickerChannel?.cancel()
+        tickerChannel = null
     }
 
     private fun scanForDevices() {

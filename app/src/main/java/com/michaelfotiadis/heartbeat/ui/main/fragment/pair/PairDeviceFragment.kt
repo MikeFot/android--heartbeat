@@ -69,16 +69,22 @@ internal class PairDeviceFragment : BaseNavFragment() {
 
     private fun processResult(action: Action) {
         when (action) {
-            Action.Idle -> {
+            Action.ConnectionIdle -> {
                 // NOOP
             }
-            Action.Started -> binder.showProgress()
-            is Action.Failed -> binder.showFailed(action.message)
-            is Action.Disconnected -> binder.showDisconnected()
-            is Action.Connected -> {
+            Action.ConnectionStarted -> binder.showProgress()
+            is Action.ConnectionFailed -> binder.showFailed(action.message)
+            is Action.ConnectionDisconnected -> binder.showDisconnected()
+            is Action.ConnectionConnected -> {
                 binder.showConnected()
                 viewModel.checkSerial()
             }
+            Action.HeartRateIdle -> {
+                // NOOP
+            }
+            Action.HeartRateSuccess -> binder.showHeartRateSuccess()
+            is Action.HeartRateFailed -> binder.showFailed(action.message)
+            is Action.HeartRateUpdated -> binder.showHeartRateUpdated(action.heartRate)
         }
     }
 }

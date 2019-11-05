@@ -22,6 +22,7 @@ class NotificationChannelInitializer @Inject constructor(
                 NotificationManager.IMPORTANCE_DEFAULT
             ).also { channel ->
                 channel.description = resources.getString(R.string.bluetooth_channel_description)
+                channel.vibrationPattern = longArrayOf(0L)
                 notificationManager.createNotificationChannel(channel)
             }
         }
