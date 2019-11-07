@@ -3,14 +3,14 @@ package com.michaelfotiadis.heartbeat.ui.main.fragment.pair.viewmodel
 import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import com.michaelfotiadis.heartbeat.bluetooth.BluetoothStatusProvider
+import com.michaelfotiadis.heartbeat.repo.BluetoothRepo
 import com.michaelfotiadis.heartbeat.bluetooth.model.ConnectionStatus
 import com.michaelfotiadis.heartbeat.bluetooth.model.HeartRateStatus
 import com.michaelfotiadis.heartbeat.service.BluetoothServiceDispatcher
 import javax.inject.Inject
 
 class PairDeviceViewModel(
-    private val bluetoothStatusProvider: BluetoothStatusProvider,
+    private val bluetoothStatusProvider: BluetoothRepo,
     private val intentDispatcher: BluetoothServiceDispatcher
 ) : ViewModel() {
 
@@ -72,7 +72,7 @@ sealed class Action {
 }
 
 class PairDeviceViewModelFactory @Inject constructor(
-    private val bluetoothStatusProvider: BluetoothStatusProvider,
+    private val bluetoothStatusProvider: BluetoothRepo,
     private val intentDispatcher: BluetoothServiceDispatcher
 ) : ViewModelProvider.Factory {
     override fun <T : ViewModel?> create(modelClass: Class<T>): T {

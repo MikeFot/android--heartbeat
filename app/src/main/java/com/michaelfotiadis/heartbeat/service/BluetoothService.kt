@@ -12,13 +12,11 @@ import android.os.IBinder
 import androidx.lifecycle.LifecycleService
 import androidx.lifecycle.Observer
 import com.clj.fastble.data.BleDevice
-import com.clj.fastble.exception.OtherException
 import com.michaelfotiadis.heartbeat.R
-import com.michaelfotiadis.heartbeat.bluetooth.BluetoothStatusProvider
 import com.michaelfotiadis.heartbeat.bluetooth.BluetoothWrapper
-import com.michaelfotiadis.heartbeat.bluetooth.model.ConnectionStatus
 import com.michaelfotiadis.heartbeat.bluetooth.model.HeartRateStatus
 import com.michaelfotiadis.heartbeat.core.logger.AppLogger
+import com.michaelfotiadis.heartbeat.repo.BluetoothRepo
 import dagger.android.AndroidInjection
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -37,7 +35,7 @@ class BluetoothService : LifecycleService() {
     }
 
     @Inject
-    lateinit var bluetoothStatusProvider: BluetoothStatusProvider
+    lateinit var bluetoothStatusProvider: BluetoothRepo
     @Inject
     lateinit var notificationFactory: ServiceNotificationFactory
     @Inject
@@ -201,20 +199,12 @@ class BluetoothService : LifecycleService() {
         }
     }
 
-    private fun connectToMac(mac: String) {
+    private fun connectToMac(macAddress: String) {
         scope.launch {
-            try {
-                bluetoothWrapper.connectToMac(
-                    mac
-                ) { bluetoothStatusProvider.connectionStatusLiveData.postValue(it) }
-            } catch (exception: IllegalArgumentException) {
-                bluetoothStatusProvider.connectionStatusLiveData.postValue(
-                    ConnectionStatus.Failed(
-                        bleDevice = null,
-                        exception = OtherException(exception.message)
-                    )
-                )
-            }
+            bluetoothWrapper.connectToMac(
+                macAddress,
+                bluetoothStatusProvider.connectionStatusLiveData::postValue
+            )
         }
     }
 

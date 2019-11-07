@@ -4,12 +4,12 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.Transformations
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import com.michaelfotiadis.heartbeat.bluetooth.BluetoothStatusProvider
+import com.michaelfotiadis.heartbeat.repo.BluetoothRepo
 import com.michaelfotiadis.heartbeat.service.BluetoothServiceDispatcher
 import javax.inject.Inject
 
 class BluetoothActivationViewModel(
-    bluetoothStatusProvider: BluetoothStatusProvider,
+    bluetoothStatusProvider: BluetoothRepo,
     private val intentDispatcher: BluetoothServiceDispatcher
 ) : ViewModel() {
 
@@ -38,7 +38,7 @@ enum class Action {
 }
 
 class BluetoothActivationViewModelFactory @Inject constructor(
-    private val bluetoothStatusProvider: BluetoothStatusProvider,
+    private val bluetoothStatusProvider: BluetoothRepo,
     private val intentDispatcher: BluetoothServiceDispatcher
 ) : ViewModelProvider.Factory {
     override fun <T : ViewModel?> create(modelClass: Class<T>): T {

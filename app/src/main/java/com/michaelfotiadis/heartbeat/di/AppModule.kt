@@ -13,6 +13,7 @@ import com.michaelfotiadis.heartbeat.core.notification.NotificationChannelInitia
 import com.michaelfotiadis.heartbeat.core.permission.PermissionsHandler
 import com.michaelfotiadis.heartbeat.core.scheduler.ExecutionThreads
 import com.michaelfotiadis.heartbeat.core.toast.ToastShower
+import com.michaelfotiadis.heartbeat.repo.MessageRepo
 import com.michaelfotiadis.heartbeat.service.BluetoothServiceDispatcher
 import dagger.Module
 import dagger.Provides
@@ -62,13 +63,15 @@ internal class AppModule {
         featureFlagProvider: FeatureFlagProvider,
         channelInitializer: NotificationChannelInitializer,
         toastShower: ToastShower,
-        appLogger: AppLogger
+        appLogger: AppLogger,
+        messageRepo: MessageRepo
     ): AppInitializer {
         return AppInitializer(
             featureFlagProvider,
             channelInitializer,
             toastShower,
-            appLogger
+            appLogger,
+            messageRepo
         )
     }
 

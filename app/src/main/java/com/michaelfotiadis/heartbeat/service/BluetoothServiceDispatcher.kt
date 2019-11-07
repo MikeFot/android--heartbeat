@@ -4,15 +4,9 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 
-class BluetoothServiceDispatcher(
-    private val context: Context
-) {
+class BluetoothServiceDispatcher(context: Context) {
 
-    companion object {
-        fun createIntent(context: Context): Intent {
-            return Intent(context, BluetoothService::class.java)
-        }
-    }
+    private val applicationContext = context.applicationContext
 
     fun createIntent(): Intent {
         return getDefaultIntent()
@@ -22,9 +16,9 @@ class BluetoothServiceDispatcher(
         getDefaultIntent().also { intent ->
             intent.action = BluetoothActions.ACTION_START
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                context.startForegroundService(intent)
+                applicationContext.startForegroundService(intent)
             } else {
-                context.startService(intent)
+                applicationContext.startService(intent)
             }
         }
     }
@@ -32,28 +26,28 @@ class BluetoothServiceDispatcher(
     fun stopService() {
         getDefaultIntent().also { intent ->
             intent.action = BluetoothActions.ACTION_STOP
-            context.startService(intent)
+            applicationContext.startService(intent)
         }
     }
 
     fun checkBluetoothConnection() {
         getDefaultIntent().also { intent ->
             intent.action = BluetoothActions.ACTION_CHECK_CONNECTION
-            context.startService(intent)
+            applicationContext.startService(intent)
         }
     }
 
     fun refreshBondedDevices() {
         getDefaultIntent().also { intent ->
             intent.action = BluetoothActions.ACTION_REFRESH_BONDED_DEVICES
-            context.startService(intent)
+            applicationContext.startService(intent)
         }
     }
 
     fun askToEnableBluetooth() {
         getDefaultIntent().also { intent ->
             intent.action = BluetoothActions.ACTION_ENABLE_BLUETOOTH
-            context.startService(intent)
+            applicationContext.startService(intent)
         }
     }
 
@@ -61,29 +55,30 @@ class BluetoothServiceDispatcher(
         getDefaultIntent().also { intent ->
             intent.action = BluetoothActions.ACTION_CONNECT_TO_MAC
             intent.putExtra(BluetoothActions.EXTRA_MAC_ADDRESS, mac)
-            context.startService(intent)
+            applicationContext.startService(intent)
         }
     }
 
     fun checkInfo() {
         getDefaultIntent().also { intent ->
             intent.action = BluetoothActions.ACTION_CHECK_HEART_SERVICE
-            context.startService(intent)
+            applicationContext.startService(intent)
         }
     }
 
     fun scanForDevices() {
         getDefaultIntent().also { intent ->
             intent.action = BluetoothActions.ACTION_SCAN_DEVICES
-            context.startService(intent)
+            applicationContext.startService(intent)
         }
     }
 
-    private fun getDefaultIntent() = Intent(context, BluetoothService::class.java)
     fun disconnectDevice() {
         getDefaultIntent().also { intent ->
             intent.action = BluetoothActions.ACTION_DISCONNECT_DEVICE
-            context.startService(intent)
+            applicationContext.startService(intent)
         }
     }
+
+    private fun getDefaultIntent() = Intent(applicationContext, BluetoothService::class.java)
 }

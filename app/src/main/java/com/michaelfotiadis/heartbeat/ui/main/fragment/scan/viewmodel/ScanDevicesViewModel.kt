@@ -4,7 +4,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.Transformations
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import com.michaelfotiadis.heartbeat.bluetooth.BluetoothStatusProvider
+import com.michaelfotiadis.heartbeat.repo.BluetoothRepo
 import com.michaelfotiadis.heartbeat.bluetooth.model.ScanStatus
 import com.michaelfotiadis.heartbeat.service.BluetoothServiceDispatcher
 import com.michaelfotiadis.heartbeat.ui.main.fragment.bonded.model.UiBondedDevice
@@ -12,7 +12,7 @@ import com.michaelfotiadis.heartbeat.ui.main.fragment.bonded.model.UiBondedDevic
 import javax.inject.Inject
 
 class ScanDevicesViewModel(
-    bluetoothStatusProvider: BluetoothStatusProvider,
+    bluetoothStatusProvider: BluetoothRepo,
     private val intentDispatcher: BluetoothServiceDispatcher,
     uiBondedDeviceMapper: UiBondedDeviceMapper
 ) : ViewModel() {
@@ -54,7 +54,7 @@ enum class Action {
 }
 
 class ScanDevicesViewModelFactory @Inject constructor(
-    private val bluetoothStatusProvider: BluetoothStatusProvider,
+    private val bluetoothStatusProvider: BluetoothRepo,
     private val intentDispatcher: BluetoothServiceDispatcher,
     private val uiBondedDeviceMapper: UiBondedDeviceMapper
 ) : ViewModelProvider.Factory {

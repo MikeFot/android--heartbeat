@@ -1,4 +1,4 @@
-package com.michaelfotiadis.heartbeat.bluetooth
+package com.michaelfotiadis.heartbeat.repo
 
 import android.bluetooth.BluetoothDevice
 import androidx.lifecycle.MutableLiveData
@@ -7,7 +7,7 @@ import com.michaelfotiadis.heartbeat.bluetooth.model.ConnectionStatus
 import com.michaelfotiadis.heartbeat.bluetooth.model.HeartRateStatus
 import com.michaelfotiadis.heartbeat.bluetooth.model.ScanStatus
 
-class BluetoothStatusProvider {
+class BluetoothRepo {
 
     val isConnectedLiveData = MutableLiveData<Boolean>()
     val bondedDevicesLiveData = MutableLiveData<Set<BluetoothDevice>>()

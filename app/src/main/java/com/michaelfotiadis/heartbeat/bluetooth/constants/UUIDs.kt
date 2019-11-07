@@ -1,4 +1,4 @@
-package com.michaelfotiadis.heartbeat.bluetooth
+package com.michaelfotiadis.heartbeat.bluetooth.constants
 
 import java.util.UUID
 

@@ -1,10 +1,11 @@
 package com.michaelfotiadis.heartbeat.core.scheduler
 
-import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import javax.inject.Inject
 
 class ExecutionThreads @Inject constructor() {
-    val jobExecutionThread = Schedulers.io()
-    val postExecutionThread = AndroidSchedulers.mainThread()
+    val bleScheduler = Schedulers.single()
+    val jobScope = CoroutineScope(Job())
 }

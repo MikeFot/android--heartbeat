@@ -11,11 +11,12 @@ import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupWithNavController
 import com.michaelfotiadis.heartbeat.R
+import com.michaelfotiadis.heartbeat.core.logger.AppLogger
 import com.michaelfotiadis.heartbeat.service.BluetoothService
 import com.michaelfotiadis.heartbeat.service.BluetoothServiceDispatcher
 import dagger.android.support.DaggerAppCompatActivity
-import javax.inject.Inject
 import kotlinx.android.synthetic.main.main_activity.*
+import javax.inject.Inject
 
 class MainActivity : DaggerAppCompatActivity(), ServiceConnection {
 
@@ -27,6 +28,8 @@ class MainActivity : DaggerAppCompatActivity(), ServiceConnection {
 
     @Inject
     lateinit var serviceDispatcher: BluetoothServiceDispatcher
+    @Inject
+    lateinit var appLogger: AppLogger
 
     private val navController: NavController by lazy {
         findNavController(R.id.nav_host_fragment)
@@ -34,6 +37,7 @@ class MainActivity : DaggerAppCompatActivity(), ServiceConnection {
 
     private var service: BluetoothService? = null
     private lateinit var appBarConfiguration: AppBarConfiguration
+    private var isServiceBound = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -53,38 +57,40 @@ class MainActivity : DaggerAppCompatActivity(), ServiceConnection {
     }
 
     override fun onDestroy() {
-        super.onDestroy()
         serviceDispatcher.stopService()
+        service = null
+        super.onDestroy()
     }
 
     override fun onSupportNavigateUp(): Boolean {
         return navController.navigateUp() || super.onNavigateUp()
     }
 
-    override fun onStart() {
-        super.onStart()
-        if (service == null) {
-            // Bind to the service
-            serviceDispatcher.createIntent().also { intent ->
-                bindService(intent, this, Context.BIND_AUTO_CREATE)
-            }
+    override fun onResume() {
+        super.onResume()
+        // Bind to the service
+        serviceDispatcher.createIntent().also { intent ->
+            isServiceBound = bindService(intent, this, Context.BIND_NOT_FOREGROUND)
+            appLogger.get().d("Binding Service '$isServiceBound'")
         }
     }
 
-    override fun onStop() {
-        super.onStop()
-        // Unbind from the service
-        if (service != null) {
+    override fun onPause() {
+        super.onPause()
+        if (isServiceBound) {
+            // Unbind from the service
+            appLogger.get().d("Unbinding Service")
             unbindService(this)
-            service = null
         }
     }
 
     override fun onServiceDisconnected(className: ComponentName?) {
+        appLogger.get().d("Service Disconnected")
         service = null
     }
 
     override fun onServiceConnected(className: ComponentName?, iBinder: IBinder?) {
+        appLogger.get().d("Service Connected")
         service = (iBinder as BluetoothService.LocalBinder).getService()
     }
 }

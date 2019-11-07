@@ -1,4 +1,4 @@
-package com.michaelfotiadis.heartbeat.bluetooth
+package com.michaelfotiadis.heartbeat.bluetooth.constants
 
 object MiMessages {
     val HMC_SINGLE_MEASUREMENT = byteArrayOf(0x15, 0x02, 0x01)
