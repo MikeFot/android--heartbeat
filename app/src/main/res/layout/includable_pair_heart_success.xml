@@ -13,7 +13,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/margin_8dp"
         android:layout_marginBottom="@dimen/margin_8dp"
-        android:text="Found heart rate monitor." />
+        android:text="Found heart rate monitor. Measuring..." />
 
     <ProgressBar
         android:id="@+id/pair_heart_success_progress_bar"

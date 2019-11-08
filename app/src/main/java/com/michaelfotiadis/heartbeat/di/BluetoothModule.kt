@@ -21,8 +21,8 @@ internal class BluetoothModule {
 
     @Provides
     @Singleton
-    fun providesMessageRepo(): MessageRepo {
-        return MessageRepo()
+    fun providesMessageRepo(executionThreads: ExecutionThreads): MessageRepo {
+        return MessageRepo(executionThreads)
     }
 
     @Provides

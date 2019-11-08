@@ -56,7 +56,7 @@ class StartNotifyHeartServiceInteractor(
 
         override fun onNotifyFailure(exception: BleException?) {
             messageRepo.log("EX: ${exception?.description}")
-            publisher.onNext(HeartRateStatus.Failed(exception))
+            publisher.onNext(HeartRateStatus.Failed(exception?.description ?: "Failed to notify heart rate"))
         }
 
         override fun onNotifySuccess() {

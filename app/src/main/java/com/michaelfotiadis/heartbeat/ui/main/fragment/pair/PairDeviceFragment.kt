@@ -68,6 +68,7 @@ internal class PairDeviceFragment : BaseNavFragment() {
     }
 
     private fun processResult(action: Action) {
+        appLogger.get().d("Action $action")
         when (action) {
             Action.ConnectionIdle -> {
                 // NOOP

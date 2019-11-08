@@ -6,7 +6,8 @@ import com.clj.fastble.data.BleDevice
 import com.michaelfotiadis.heartbeat.bluetooth.model.ScanStatus
 import com.michaelfotiadis.heartbeat.core.scheduler.ExecutionThreads
 import com.michaelfotiadis.heartbeat.repo.MessageRepo
-import io.reactivex.Completable
+import io.reactivex.Observable
+import org.reactivestreams.Subscriber
 
 class ScanForDevicesInteractor(
     private val bleManager: BleManager,
@@ -16,33 +17,36 @@ class ScanForDevicesInteractor(
 
     fun execute(callback: (ScanStatus) -> Unit): Cancellable {
 
-        val disposable = Completable.fromAction {
-            bleManager.scan(ScanCallback(callback))
+        val disposable = Observable.fromPublisher<ScanStatus> { publisher ->
+            bleManager.scan(ScanCallback(publisher))
         }
             .subscribeOn(executionThreads.bleScheduler)
+            .doOnNext(callback::invoke)
+            .doOnDispose { messageRepo.log("Scan disposed") }
             .subscribe()
         return DisposableCancellable(disposable)
     }
 
-    inner class ScanCallback(private val callback: (ScanStatus) -> Unit) : BleScanCallback() {
+    inner class ScanCallback(private val publisher: Subscriber<in ScanStatus>) : BleScanCallback() {
 
         private val devices = mutableListOf<BleDevice>()
 
         override fun onScanFinished(scanResultList: List<BleDevice>?) {
             messageRepo.log("On Scan Finished with ${scanResultList?.size} items")
-            callback.invoke(ScanStatus.Finished(scanResultList ?: listOf()))
+            publisher.onNext(ScanStatus.Finished(scanResultList ?: listOf()))
+            publisher.onComplete()
         }
 
         override fun onScanStarted(success: Boolean) {
             messageRepo.log("On Scan Started '$success'")
-            callback.invoke(ScanStatus.Started)
+            publisher.onNext(ScanStatus.Started)
         }
 
         override fun onScanning(bleDevice: BleDevice?) {
             if (bleDevice != null) {
                 messageRepo.log("On Scanning '${bleDevice.name} at address '${bleDevice.mac}'")
                 devices.add(bleDevice)
-                callback.invoke(ScanStatus.Scanning(devices))
+                publisher.onNext(ScanStatus.Scanning(devices))
             } else {
                 messageRepo.log("On Scanning null device")
             }

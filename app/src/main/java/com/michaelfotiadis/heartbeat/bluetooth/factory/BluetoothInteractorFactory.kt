@@ -6,8 +6,11 @@ import com.michaelfotiadis.heartbeat.bluetooth.interactor.CancelScanInteractor
 import com.michaelfotiadis.heartbeat.bluetooth.interactor.ConnectToMacInteractor
 import com.michaelfotiadis.heartbeat.bluetooth.interactor.DisconnectDeviceInteractor
 import com.michaelfotiadis.heartbeat.bluetooth.interactor.GetBondedDevicesInteractor
+import com.michaelfotiadis.heartbeat.bluetooth.interactor.MeasureSingleHeartRateInteractor
+import com.michaelfotiadis.heartbeat.bluetooth.interactor.PingHeartRateInteractor
 import com.michaelfotiadis.heartbeat.bluetooth.interactor.ScanForDevicesInteractor
 import com.michaelfotiadis.heartbeat.bluetooth.interactor.StartNotifyHeartServiceInteractor
+import com.michaelfotiadis.heartbeat.bluetooth.interactor.StopHeartRateMeasurementInteractor
 import com.michaelfotiadis.heartbeat.bluetooth.interactor.StopNotifyHeartServiceInteractor
 import com.michaelfotiadis.heartbeat.core.scheduler.ExecutionThreads
 import com.michaelfotiadis.heartbeat.repo.MessageRepo
@@ -40,11 +43,23 @@ class BluetoothInteractorFactory(
     }
 
     val connectToMacInteractor: ConnectToMacInteractor by lazy {
-        ConnectToMacInteractor(bleManager, executionThreads)
+        ConnectToMacInteractor(bleManager, messageRepo, executionThreads)
+    }
+
+    val measureSingleHeartRateInteractor: MeasureSingleHeartRateInteractor by lazy {
+        MeasureSingleHeartRateInteractor(bleManager, miServices, messageRepo, executionThreads)
     }
 
     val getBondedDevicesInteractor: GetBondedDevicesInteractor by lazy {
         GetBondedDevicesInteractor(bleManager, executionThreads)
+    }
+
+    val pingHeartRateInteractor: PingHeartRateInteractor by lazy {
+        PingHeartRateInteractor(bleManager, miServices, messageRepo, executionThreads)
+    }
+
+    val stopHeartRateMeasurementInteractor: StopHeartRateMeasurementInteractor by lazy {
+        StopHeartRateMeasurementInteractor(bleManager, miServices, messageRepo, executionThreads)
     }
 
 }

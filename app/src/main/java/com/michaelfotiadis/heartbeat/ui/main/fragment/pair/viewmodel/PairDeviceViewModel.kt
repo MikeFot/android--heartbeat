@@ -3,9 +3,9 @@ package com.michaelfotiadis.heartbeat.ui.main.fragment.pair.viewmodel
 import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import com.michaelfotiadis.heartbeat.repo.BluetoothRepo
 import com.michaelfotiadis.heartbeat.bluetooth.model.ConnectionStatus
 import com.michaelfotiadis.heartbeat.bluetooth.model.HeartRateStatus
+import com.michaelfotiadis.heartbeat.repo.BluetoothRepo
 import com.michaelfotiadis.heartbeat.service.BluetoothServiceDispatcher
 import javax.inject.Inject
 
@@ -43,9 +43,7 @@ class PairDeviceViewModel(
         return when (heartRateStatus) {
             HeartRateStatus.Success -> Action.HeartRateSuccess
             is HeartRateStatus.Updated -> Action.HeartRateUpdated(heartRateStatus.heartRate)
-            is HeartRateStatus.Failed -> Action.HeartRateFailed(
-                heartRateStatus.exception?.description ?: ""
-            )
+            is HeartRateStatus.Failed -> Action.HeartRateFailed(heartRateStatus.error)
             else -> Action.HeartRateIdle
         }
     }

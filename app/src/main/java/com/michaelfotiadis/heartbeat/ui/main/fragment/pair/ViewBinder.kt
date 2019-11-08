@@ -33,10 +33,11 @@ class ViewBinder(view: View) {
     }
 
     init {
-
-        viewFlipper.inAnimation =
-            AnimationUtils.loadAnimation(view.context, R.anim.enter_from_right)
-        viewFlipper.outAnimation = AnimationUtils.loadAnimation(view.context, R.anim.exit_to_left)
+        viewFlipper.apply {
+            displayedChild = INDEX_PROGRESS
+            inAnimation = AnimationUtils.loadAnimation(view.context, R.anim.enter_from_right)
+            outAnimation = AnimationUtils.loadAnimation(view.context, R.anim.exit_to_left)
+        }
 
         failedRetryButton.setOnClickListener {
             callbacks?.onRetry()

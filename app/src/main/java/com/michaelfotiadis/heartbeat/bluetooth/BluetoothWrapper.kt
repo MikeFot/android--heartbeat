@@ -6,11 +6,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
 import com.clj.fastble.BleManager
-import com.clj.fastble.callback.BleWriteCallback
 import com.clj.fastble.data.BleDevice
-import com.clj.fastble.exception.BleException
-import com.michaelfotiadis.heartbeat.bluetooth.constants.MiMessages
-import com.michaelfotiadis.heartbeat.bluetooth.constants.UUIDs
 import com.michaelfotiadis.heartbeat.bluetooth.factory.BluetoothInteractorFactory
 import com.michaelfotiadis.heartbeat.bluetooth.interactor.Cancellable
 import com.michaelfotiadis.heartbeat.bluetooth.model.ConnectionStatus
@@ -27,6 +23,8 @@ class BluetoothWrapper(
 ) {
 
     private val operations = mutableListOf<Cancellable>()
+    private var heartRateOperation: Cancellable? = null
+    private var continuousHeartRateOperation: Cancellable? = null
 
     fun isBluetoothEnabled(): Boolean {
         return bleManager.bluetoothAdapter.isEnabled
@@ -60,78 +58,34 @@ class BluetoothWrapper(
             .register(operations)
     }
 
-    fun pingHeartRateControl(bleDevice: BleDevice) {
-        bleManager.write(bleDevice,
-            UUIDs.HEART_RATE_SERVICE.toString(),
-            UUIDs.HEART_RATE_CONTROL_POINT_CHARACTERISTIC.toString(),
-            MiMessages.HMC_PING,
-            object : BleWriteCallback() {
-                override fun onWriteSuccess(current: Int, total: Int, justWrite: ByteArray?) {
-                    appLogger.get(TAG).d("Ping Write successful")
-                }
-
-                override fun onWriteFailure(exception: BleException?) {
-                    appLogger.get(TAG).e("Ping Write failed")
-                }
-            })
+    fun startPingHeartRate(bleDevice: BleDevice) {
+        heartRateOperation?.cancel()
+        heartRateOperation = factory.pingHeartRateInteractor.execute(bleDevice)
+            .also { cancellable -> operations.add(cancellable) }
     }
 
-    fun stopHeartRate(bleDevice: BleDevice, callback: () -> Unit) {
-        bleManager.write(bleDevice,
-            UUIDs.HEART_RATE_SERVICE.toString(),
-            UUIDs.HEART_RATE_CONTROL_POINT_CHARACTERISTIC.toString(),
-            byteArrayOf(21, 2, 1),
-            object : BleWriteCallback() {
-                override fun onWriteSuccess(current: Int, total: Int, justWrite: ByteArray?) {
-                    appLogger.get(TAG).d("Stop Heart Rate Write successful")
-                    callback.invoke()
-                }
-
-                override fun onWriteFailure(exception: BleException?) {
-                    appLogger.get(TAG).e("Stop Heart Rate Write failed: ${exception?.description}")
-                    callback.invoke()
-                }
-            })
+    fun stopPingHeartRate() {
+        heartRateOperation?.cancel()
+        heartRateOperation = null
     }
 
-    fun askForSingleHeartRate(bleDevice: BleDevice, callback: (HeartRateStatus) -> Unit) {
-
-        bleManager.write(bleDevice,
-            UUIDs.HEART_RATE_SERVICE.toString(),
-            UUIDs.HEART_RATE_CONTROL_POINT_CHARACTERISTIC.toString(),
-            MiMessages.HMC_SINGLE_MEASUREMENT,
-            object : BleWriteCallback() {
-                override fun onWriteSuccess(current: Int, total: Int, justWrite: ByteArray?) {
-                    appLogger.get(TAG).d("Single Heart Rate Write successful")
-                    startNotifyHeartService(bleDevice, callback)
-                }
-
-                override fun onWriteFailure(exception: BleException?) {
-                    appLogger.get(TAG)
-                        .e("Single Heart Rate Write failed: ${exception?.description}")
-                    callback.invoke(HeartRateStatus.Failed(exception))
-                    stopNotifyHeartService(bleDevice)
-                }
-            })
+    fun askForSingleHeartRate(bleDevice: BleDevice?, callback: (HeartRateStatus) -> Unit) {
+        if (bleDevice == null) {
+            callback.invoke(HeartRateStatus.Failed("No device connected"))
+        } else {
+            factory.measureSingleHeartRateInteractor.execute(bleDevice, callback)
+                .register(operations)
+        }
     }
 
-    fun askForContinuousHeartRate(bleDevice: BleDevice, callback: (HeartRateStatus) -> Unit) {
-        bleManager.write(bleDevice,
-            UUIDs.HEART_RATE_SERVICE.toString(),
-            UUIDs.HEART_RATE_CONTROL_POINT_CHARACTERISTIC.toString(),
-            MiMessages.HMC_CONTINUOUS_MEASUREMENT,
-            object : BleWriteCallback() {
-                override fun onWriteSuccess(current: Int, total: Int, justWrite: ByteArray?) {
-                    appLogger.get(TAG).d("Continuous Heart Rate Write successful")
-                    startNotifyHeartService(bleDevice, callback)
-                }
-
-                override fun onWriteFailure(exception: BleException?) {
-                    appLogger.get(TAG).e("Continuous Heart Rate Write failed")
-                    callback.invoke(HeartRateStatus.Failed(exception))
-                    stopNotifyHeartService(bleDevice)
-                }
-            })
+    fun stopContinuousHeartRate(bleDevice: BleDevice, callback: () -> Unit) {
+        if (continuousHeartRateOperation != null) {
+            factory.stopHeartRateMeasurementInteractor
+                .execute(bleDevice, callback)
+                .register(operations)
+        } else {
+            callback.invoke()
+        }
     }
 
     private fun startNotifyHeartService(bleDevice: BleDevice, callback: (HeartRateStatus) -> Unit) {
