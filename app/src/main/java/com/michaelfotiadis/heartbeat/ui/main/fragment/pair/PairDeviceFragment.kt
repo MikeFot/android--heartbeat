@@ -4,8 +4,8 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProviders
 import androidx.navigation.fragment.navArgs
 import com.michaelfotiadis.heartbeat.R
 import com.michaelfotiadis.heartbeat.core.logger.AppLogger
@@ -26,9 +26,7 @@ internal class PairDeviceFragment : BaseNavFragment() {
 
     private lateinit var binder: ViewBinder
 
-    private val viewModel: PairDeviceViewModel by lazy {
-        ViewModelProviders.of(this, factory).get(PairDeviceViewModel::class.java)
-    }
+    private val viewModel by viewModels<PairDeviceViewModel>({ this }, { factory })
 
     override fun onCreateView(
         inflater: LayoutInflater,
