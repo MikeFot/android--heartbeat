@@ -57,6 +57,9 @@ dependencies {
     implementation rootProject.ext.dependencies.coroutinesCore
     implementation rootProject.ext.dependencies.coroutinesAndroid
 
+    // Shared pref
+    api rootProject.ext.dependencies.kotlinpref
+
     implementation "com.google.dagger:dagger:$daggerVersion"
     kapt "com.google.dagger:dagger-compiler:$daggerVersion"
     implementation "com.google.dagger:dagger-android:$daggerVersion"

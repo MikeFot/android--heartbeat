@@ -60,6 +60,9 @@ allprojects {
                 // *** Crash reporting
                 crashlytics           : 'com.crashlytics.sdk.android:crashlytics:2.10.1',
 
+                // *** Shared preferences
+                kotlinpref            : 'com.chibatching.kotpref:kotpref:2.8.0'
+
         ]
         testDependencies = [
                 jUnit                 : 'androidx.test.ext:junit:1.1.2-alpha01',

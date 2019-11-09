@@ -1,8 +1,9 @@
 <resources>
 
-    <style name="Widget.App.Toolbar" parent="@style/ThemeOverlay.MaterialComponents">
-        <item name="android:windowContentOverlay">@null</item>
+    <style name="Widget.App.DefaultToolbar" parent="@style/ThemeOverlay.AppCompat.ActionBar">
         <item name="popupTheme">@style/ThemeOverlay.MaterialComponents.Light</item>
+        <!-- Customize color of navigation drawer icon and back arrow -->
+        <item name="colorControlNormal">?attr/colorOnPrimary</item>
     </style>
 
 </resources>

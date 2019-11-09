@@ -17,6 +17,12 @@
     <color name="color_secondary_blue">#C5CAE9</color>
     <color name="color_secondary_variant_blue">#448AFF</color>
 
+    <!-- Third pink theme -->
+    <color name="color_primary_pink">#E91E63</color>
+    <color name="color_primary_variant_pink">#C2185B</color>
+    <color name="color_secondary_pink">#F8BBD0</color>
+    <color name="color_secondary_variant_pink">#FF4081</color>
+
     <!--colorBackground appears behind scrollable content and is used for the default window-->
     <!--background. colorSurface is mapped to the surface of components such as cards, sheets-->
     <!--and menus. colorError is used to indicate an error state for components such as-->
