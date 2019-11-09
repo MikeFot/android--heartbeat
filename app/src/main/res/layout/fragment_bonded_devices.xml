@@ -9,7 +9,7 @@
 
     <TextView
         android:id="@+id/bonded_devices_info_text"
-        style="@style/AppTextView.Header"
+        android:textAppearance="?attr/textAppearanceSubtitle1"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/margin_8dp"
@@ -33,9 +33,9 @@
         tools:context=".ui.main.fragment.bonded.BondedDevicesFragment"
         tools:listitem="@layout/list_item_bluetooth_device" />
 
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/bonded_devices_missing_button"
-        style="@style/BorderlessButton"
+        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/margin_8dp"

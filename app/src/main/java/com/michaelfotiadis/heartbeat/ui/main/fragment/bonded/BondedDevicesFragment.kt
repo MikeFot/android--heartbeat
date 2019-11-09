@@ -4,8 +4,8 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.DividerItemDecoration
 import com.michaelfotiadis.heartbeat.R
 import com.michaelfotiadis.heartbeat.ui.base.BaseNavFragment
@@ -22,9 +22,7 @@ internal class BondedDevicesFragment : BaseNavFragment() {
     @Inject
     lateinit var factory: BondedDevicesViewModelFactory
 
-    private val viewModel: BondedDevicesViewModel by lazy {
-        ViewModelProviders.of(this, factory).get(BondedDevicesViewModel::class.java)
-    }
+    private val viewModel by viewModels<BondedDevicesViewModel>({ this }, { factory })
 
     private lateinit var adapter: BluetoothBondedDevicesAdapter
 

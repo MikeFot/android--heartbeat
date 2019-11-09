@@ -12,6 +12,8 @@ import com.michaelfotiadis.heartbeat.core.logger.AppLogger
 import com.michaelfotiadis.heartbeat.core.notification.NotificationChannelInitializer
 import com.michaelfotiadis.heartbeat.core.permission.PermissionsHandler
 import com.michaelfotiadis.heartbeat.core.scheduler.ExecutionThreads
+import com.michaelfotiadis.heartbeat.core.storage.LocalStorage
+import com.michaelfotiadis.heartbeat.core.storage.Storage
 import com.michaelfotiadis.heartbeat.core.toast.ToastShower
 import com.michaelfotiadis.heartbeat.repo.MessageRepo
 import com.michaelfotiadis.heartbeat.service.BluetoothServiceDispatcher
@@ -37,6 +39,10 @@ internal class AppModule {
     fun providesFeatureFlags(): FeatureFlagProvider {
         return FeatureFlagProvider()
     }
+
+    @Provides
+    @Singleton
+    internal fun providesStorage(context: Context): Storage = LocalStorage(context)
 
     @Provides
     @Singleton
