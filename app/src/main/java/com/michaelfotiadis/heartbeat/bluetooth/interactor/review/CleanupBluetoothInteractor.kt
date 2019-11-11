@@ -1,4 +1,4 @@
-package com.michaelfotiadis.heartbeat.bluetooth.interactor
+package com.michaelfotiadis.heartbeat.bluetooth.interactor.review
 
 import com.clj.fastble.BleManager
 import com.michaelfotiadis.heartbeat.core.scheduler.ExecutionThreads

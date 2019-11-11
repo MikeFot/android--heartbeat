@@ -1,4 +1,4 @@
-package com.michaelfotiadis.heartbeat.bluetooth.interactor
+package com.michaelfotiadis.heartbeat.bluetooth.interactor.review
 
 import android.bluetooth.BluetoothDevice
 import com.clj.fastble.BleManager

@@ -70,26 +70,16 @@ internal class PairDeviceFragment : BaseNavFragment() {
     private fun processResult(action: Action) {
         appLogger.get().d("Action $action")
         when (action) {
-            Action.ConnectionIdle -> {
-                // NOOP
-            }
-            Action.ConnectionStarted -> binder.showProgress()
-            is Action.ConnectionFailed -> binder.showFailed(action.message)
-            is Action.ConnectionDisconnected -> binder.showDisconnected()
-            is Action.ConnectionConnected -> {
-                binder.showConnected()
-                viewModel.requestAuthorisation()
-            }
-            is Action.Authorise -> {
-                viewModel.checkHeartRate()
-            }
-            Action.HeartRateNotified -> viewModel.checkHeartRate()
-            Action.HeartRateIdle -> {
-                // NOOP
-            }
-            Action.HeartRateSuccess -> binder.showHeartRateSuccess()
-            is Action.HeartRateFailed -> binder.showFailed(action.message)
-            is Action.HeartRateUpdated -> binder.showHeartRateUpdated(action.heartRate)
+            Action.IDLE -> binder.showIdle()
+            Action.CONNECTING -> binder.showConnecting()
+            Action.CONNECTED -> binder.showConnected()
+            Action.DISCONNECTED -> binder.showDisconnected()
+            Action.SERVICES_DISCOVERED -> binder.showServicesDiscovered()
+            Action.AUTH_NOTIFIED -> binder.showAuthorising()
+            Action.AUTH_STEP_ONE -> binder.showAuthorisedOne()
+            Action.AUTH_STEP_TWO -> binder.showAuthorisedTwo()
+            Action.AUTH_DONE -> binder.showAuthorisedDone()
+            Action.AUTH_FAILED -> binder.showAuthorisedFailed()
         }
     }
 }

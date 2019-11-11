@@ -1,7 +1,9 @@
-package com.michaelfotiadis.heartbeat.bluetooth.interactor
+package com.michaelfotiadis.heartbeat.bluetooth.interactor.review
 
 import com.clj.fastble.BleManager
 import com.clj.fastble.data.BleDevice
+import com.michaelfotiadis.heartbeat.bluetooth.interactor.Cancellable
+import com.michaelfotiadis.heartbeat.bluetooth.interactor.DisposableCancellable
 import com.michaelfotiadis.heartbeat.core.scheduler.ExecutionThreads
 import io.reactivex.Completable
 

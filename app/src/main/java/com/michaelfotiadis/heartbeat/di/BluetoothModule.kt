@@ -64,15 +64,24 @@ internal class BluetoothModule {
     @Provides
     @Singleton
     fun providesBluetoothWrapper(
+        context: Context,
         bluetoothRepo: BluetoothRepo,
+        messageRepo: MessageRepo,
+        executionThreads: ExecutionThreads,
         bluetoothInteractorFactory: BluetoothInteractorFactory
     ): BluetoothWrapper {
-        return BluetoothWrapper(bluetoothRepo, bluetoothInteractorFactory)
+        return BluetoothWrapper(
+            context,
+            bluetoothRepo,
+            messageRepo,
+            executionThreads,
+            bluetoothInteractorFactory
+        )
     }
 
     @Provides
     @Singleton
-    fun providesBluetoothStatusProvider(): BluetoothRepo {
-        return BluetoothRepo()
+    fun providesBluetoothStatusProvider(executionThreads: ExecutionThreads): BluetoothRepo {
+        return BluetoothRepo(executionThreads)
     }
 }

@@ -1,10 +1,12 @@
-package com.michaelfotiadis.heartbeat.bluetooth.interactor
+package com.michaelfotiadis.heartbeat.bluetooth.interactor.review
 
 import com.clj.fastble.BleManager
 import com.clj.fastble.callback.BleNotifyCallback
 import com.clj.fastble.data.BleDevice
 import com.clj.fastble.exception.BleException
 import com.michaelfotiadis.heartbeat.bluetooth.constants.MiServices
+import com.michaelfotiadis.heartbeat.bluetooth.interactor.Cancellable
+import com.michaelfotiadis.heartbeat.bluetooth.interactor.DisposableCancellable
 import com.michaelfotiadis.heartbeat.bluetooth.model.HeartRateStatus
 import com.michaelfotiadis.heartbeat.core.scheduler.ExecutionThreads
 import com.michaelfotiadis.heartbeat.repo.MessageRepo
@@ -25,9 +27,12 @@ class StartNotifyHeartServiceInteractor(
         val disposable = Observable.fromPublisher<HeartRateStatus> { publisher ->
             bleManager.notify(
                 bleDevice,
-                miServices.heartRateService.service,
-                miServices.heartRateService.measurementCharacteristic,
-                NotifyCallback(publisher, messageRepo)
+                miServices.heartRateService.service.toString(),
+                miServices.heartRateService.measurementCharacteristic.toString(),
+                NotifyCallback(
+                    publisher,
+                    messageRepo
+                )
             )
         }
             .delaySubscription(1, TimeUnit.SECONDS)

@@ -1,6 +1,7 @@
-package com.michaelfotiadis.heartbeat.bluetooth.interactor
+package com.michaelfotiadis.heartbeat.bluetooth.interactor.review
 
 import com.michaelfotiadis.heartbeat.bluetooth.constants.MiServices
+import com.michaelfotiadis.heartbeat.bluetooth.interactor.DisposableCancellable
 import com.michaelfotiadis.heartbeat.bluetooth.model.HeartRateStatus
 import com.michaelfotiadis.heartbeat.core.scheduler.ExecutionThreads
 import com.michaelfotiadis.heartbeat.repo.MessageRepo
@@ -24,7 +25,7 @@ class MeasureSingleHeartRateInteractor(
     ): DisposableCancellable {
 
         val writeObservable = rxBleConnection.writeCharacteristic(
-            UUID.fromString(miServices.heartRateService.controlPointCharacteristic),
+            UUID.fromString(miServices.heartRateService.controlPointCharacteristic.toString()),
             miServices.heartRateService.dataSingleMeasurement
         )
             .toObservable()
@@ -34,7 +35,7 @@ class MeasureSingleHeartRateInteractor(
 
         val notificationObservable = rxBleConnection.setupNotification(
             UUID.fromString(
-                miServices.heartRateService.measurementCharacteristic
+                miServices.heartRateService.measurementCharacteristic.toString()
             ), NotificationSetupMode.DEFAULT
         )
             .doOnNext { messageRepo.log("Notification received") }

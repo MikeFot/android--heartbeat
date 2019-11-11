@@ -1,6 +1,7 @@
-package com.michaelfotiadis.heartbeat.bluetooth.interactor
+package com.michaelfotiadis.heartbeat.bluetooth.interactor.review
 
 import com.michaelfotiadis.heartbeat.bluetooth.constants.MiServices
+import com.michaelfotiadis.heartbeat.bluetooth.interactor.DisposableCancellable
 import com.michaelfotiadis.heartbeat.bluetooth.model.ConnectionStatus
 import com.michaelfotiadis.heartbeat.core.model.Optional
 import com.michaelfotiadis.heartbeat.core.scheduler.ExecutionThreads
@@ -93,7 +94,7 @@ class ConnectToMacInteractor(
         val heartRateService = connection
             .discoverServices(5, TimeUnit.SECONDS)
             .flatMap { services ->
-                services.getService(UUID.fromString(miServices.heartRateService.service))
+                services.getService(UUID.fromString(miServices.heartRateService.service.toString()))
             }
             .map { service -> Optional.of(service) }
             .onErrorReturn { Optional.empty() }

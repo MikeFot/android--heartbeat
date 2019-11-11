@@ -12,4 +12,5 @@ class ExecutionThreads @Inject constructor() {
     val mainScheduler = AndroidSchedulers.mainThread()
     val jobScope = CoroutineScope(Job())
     val messageScope = CoroutineScope(Dispatchers.Main + Job())
+    val actionScope = CoroutineScope(Dispatchers.Main + Job())
 }

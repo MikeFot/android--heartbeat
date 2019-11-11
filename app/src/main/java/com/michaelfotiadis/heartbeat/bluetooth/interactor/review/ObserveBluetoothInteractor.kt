@@ -1,5 +1,6 @@
-package com.michaelfotiadis.heartbeat.bluetooth.interactor
+package com.michaelfotiadis.heartbeat.bluetooth.interactor.review
 
+import com.michaelfotiadis.heartbeat.bluetooth.interactor.DisposableCancellable
 import com.michaelfotiadis.heartbeat.core.scheduler.ExecutionThreads
 import com.michaelfotiadis.heartbeat.repo.MessageRepo
 import com.polidea.rxandroidble2.RxBleClient

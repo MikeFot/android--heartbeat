@@ -1,9 +1,10 @@
-package com.michaelfotiadis.heartbeat.bluetooth.interactor
+package com.michaelfotiadis.heartbeat.bluetooth.interactor.review
 
 import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattDescriptor
 import com.michaelfotiadis.heartbeat.bluetooth.constants.MiServices
 import com.michaelfotiadis.heartbeat.bluetooth.constants.UUIDs
+import com.michaelfotiadis.heartbeat.bluetooth.interactor.DisposableCancellable
 import com.michaelfotiadis.heartbeat.bluetooth.model.ConnectionStatus
 import com.michaelfotiadis.heartbeat.core.scheduler.ExecutionThreads
 import com.michaelfotiadis.heartbeat.repo.MessageRepo
@@ -40,11 +41,11 @@ class AuthoriseInteractor(
                 }
                 .flatMap { bytes ->
                     val data = ValueInterpreter.getStringValue(bytes, 0)
-                    val authData = ValueInterpreter.getStringValue(miServices.authorisationBytes, 0)
+                    val authData = ValueInterpreter.getStringValue(miServices.authService.authorisationBytes, 0)
                     messageRepo.log("Replacing value $data with $authData")
                     rxBleConnection.writeCharacteristic(
                         UUIDs.CUSTOM_SERVICE_AUTH_CHARACTERISTIC,
-                        miServices.authorisationBytes
+                        miServices.authService.authorisationBytes
                     )
                 }
                 .flatMap { bytes ->

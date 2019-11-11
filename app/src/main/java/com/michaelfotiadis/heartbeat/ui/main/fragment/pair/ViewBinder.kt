@@ -1,29 +1,19 @@
 package com.michaelfotiadis.heartbeat.ui.main.fragment.pair
 
 import android.view.View
-import android.view.animation.AnimationUtils
 import android.widget.Button
+import android.widget.ImageView
+import android.widget.ProgressBar
 import android.widget.TextView
-import android.widget.ViewFlipper
 import com.michaelfotiadis.heartbeat.R
 
 class ViewBinder(view: View) {
-    private companion object {
-        private const val INDEX_PROGRESS = 0
-        private const val INDEX_CONNECTED = 1
-        private const val INDEX_DISCONNECTED = 2
-        private const val INDEX_FAILED = 3
-        private const val INDEX_HEART_SUCCESS = 4
-        private const val INDEX_HEART_UPDATED = 5
-    }
 
-    private val viewFlipper: ViewFlipper = view.findViewById(R.id.pair_view_flipper)
-    private val failedRetryButton: Button = view.findViewById(R.id.pair_failed_retry)
-    private val failedCancelButton: Button = view.findViewById(R.id.pair_failed_cancel)
-    private val disconnectedRetryButton: Button = view.findViewById(R.id.pair_disconnected_retry)
-    private val disconnectedCancelButton: Button = view.findViewById(R.id.pair_disconnected_cancel)
-    private val failedDescriptionText: TextView = view.findViewById(R.id.pair_failed_description)
-    private val heartRateValueText: TextView = view.findViewById(R.id.pair_heart_updated_value)
+    private val connectImage: ImageView = view.findViewById(R.id.connect_image)
+    private val connectProgress: ProgressBar = view.findViewById(R.id.connect_progress)
+    private val statusText: TextView = view.findViewById(R.id.connect_text)
+    private val retryButton: Button = view.findViewById(R.id.connect_retry_button)
+    private val cancelButton: Button = view.findViewById(R.id.connect_cancel_button)
 
     var callbacks: Callbacks? = null
 
@@ -33,51 +23,93 @@ class ViewBinder(view: View) {
     }
 
     init {
-        viewFlipper.apply {
-            displayedChild = INDEX_PROGRESS
-            inAnimation = AnimationUtils.loadAnimation(view.context, R.anim.enter_from_right)
-            outAnimation = AnimationUtils.loadAnimation(view.context, R.anim.exit_to_left)
-        }
-
-        failedRetryButton.setOnClickListener {
+        retryButton.setOnClickListener {
             callbacks?.onRetry()
         }
-        disconnectedRetryButton.setOnClickListener {
-            callbacks?.onRetry()
-        }
-        failedCancelButton.setOnClickListener {
-            callbacks?.onCancel()
-        }
-        disconnectedCancelButton.setOnClickListener {
+        cancelButton.setOnClickListener {
             callbacks?.onCancel()
         }
     }
 
-    fun showProgress() {
-        viewFlipper.displayedChild = INDEX_PROGRESS
+    fun showIdle() {
+        connectImage.setImageResource(R.drawable.ic_bluetooth_white_24dp)
+        connectProgress.visibility = View.INVISIBLE
+        statusText.text = "Waiting for device..."
+        retryButton.visibility = View.INVISIBLE
+        retryButton.isEnabled = false
+    }
+
+    fun showConnecting() {
+        connectProgress.visibility = View.VISIBLE
+        connectImage.setImageResource(R.drawable.ic_bluetooth_searching_white_24dp)
+        statusText.text = "Connecting..."
+        retryButton.visibility = View.INVISIBLE
+        retryButton.isEnabled = false
     }
 
     fun showConnected() {
-        viewFlipper.displayedChild = INDEX_CONNECTED
+        connectProgress.visibility = View.VISIBLE
+        connectImage.setImageResource(R.drawable.ic_bluetooth_connected_white_24dp)
+        statusText.text = "Connected successfully. Discovering services..."
+        retryButton.visibility = View.INVISIBLE
+        retryButton.isEnabled = false
+    }
+
+    fun showServicesDiscovered() {
+        connectProgress.visibility = View.VISIBLE
+        connectImage.setImageResource(R.drawable.ic_bluetooth_connected_white_24dp)
+        statusText.text = "Your device should vibrate. Please tab the button on it."
+        retryButton.visibility = View.INVISIBLE
+        retryButton.isEnabled = false
+    }
+
+    fun showAuthorising() {
+        connectProgress.visibility = View.VISIBLE
+        connectImage.setImageResource(R.drawable.ic_vpn_key_white_24dp)
+        statusText.text = "Authorising... Your device should vibrate. Please tab the button on it."
+        retryButton.visibility = View.INVISIBLE
+        retryButton.isEnabled = false
+    }
+
+    fun showAuthorisedOne() {
+        connectProgress.visibility = View.VISIBLE
+        connectImage.setImageResource(R.drawable.ic_vpn_key_white_24dp)
+        statusText.text = "Authorising... (step 1/3)"
+        retryButton.visibility = View.INVISIBLE
+        retryButton.isEnabled = false
+    }
+
+    fun showAuthorisedTwo() {
+        connectProgress.visibility = View.VISIBLE
+        connectImage.setImageResource(R.drawable.ic_vpn_key_white_24dp)
+        statusText.text = "Authorising... (step 2/3)"
+        retryButton.visibility = View.INVISIBLE
+        retryButton.isEnabled = false
+    }
+
+    fun showAuthorisedDone() {
+        connectProgress.visibility = View.INVISIBLE
+        connectImage.setImageResource(R.drawable.ic_verified_user_white_24dp)
+        statusText.text = "Authorised successfully."
+        retryButton.visibility = View.INVISIBLE
+        retryButton.isEnabled = false
+    }
+
+    fun showAuthorisedFailed() {
+        connectProgress.visibility = View.INVISIBLE
+        connectImage.setImageResource(R.drawable.ic_cancel_red_24dp)
+        statusText.text = "Failed to authorise."
+        retryButton.visibility = View.VISIBLE
+        retryButton.isEnabled = true
     }
 
     fun showDisconnected() {
-        viewFlipper.displayedChild = INDEX_DISCONNECTED
+        connectProgress.visibility = View.INVISIBLE
+        connectImage.setImageResource(R.drawable.ic_bluetooth_disabled_white_24dp)
+        statusText.text = "Device disconnected"
+        retryButton.visibility = View.VISIBLE
+        retryButton.isEnabled = true
     }
 
-    fun showFailed(message: String) {
-        viewFlipper.displayedChild = INDEX_FAILED
-        failedDescriptionText.text = message
-    }
 
-    fun showHeartRateSuccess() {
-        viewFlipper.displayedChild = INDEX_HEART_SUCCESS
-    }
-
-    fun showHeartRateUpdated(heartRate: Int) {
-        if (viewFlipper.displayedChild != INDEX_HEART_UPDATED) {
-            viewFlipper.displayedChild = INDEX_HEART_UPDATED
-        }
-        heartRateValueText.text = heartRate.toString()
-    }
 }
