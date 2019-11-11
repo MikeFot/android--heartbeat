@@ -110,9 +110,9 @@ class BluetoothService : LifecycleService() {
         fun getService(): BluetoothService = this@BluetoothService
     }
 
-    override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
-        messageRepo.log("ACTION ${intent.action}")
-        when (intent.action) {
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        messageRepo.log("ACTION ${intent?.action}")
+        when (intent?.action) {
             BluetoothActions.ACTION_START -> handleActionStart()
             BluetoothActions.ACTION_STOP -> handleActionStop()
             BluetoothActions.ACTION_CHECK_CONNECTION -> checkConnection()
