@@ -57,8 +57,8 @@ class ViewBinder(view: View) {
 
     fun showServicesDiscovered() {
         connectProgress.visibility = View.VISIBLE
-        connectImage.setImageResource(R.drawable.ic_bluetooth_connected_white_24dp)
-        statusText.text = "Your device should vibrate. Please tab the button on it."
+        connectImage.setImageResource(R.drawable.ic_vibration_white_24dp)
+        statusText.text = "Your device should vibrate. Please tap the button on it."
         retryButton.visibility = View.INVISIBLE
         retryButton.isEnabled = false
     }
@@ -66,7 +66,7 @@ class ViewBinder(view: View) {
     fun showAuthorising() {
         connectProgress.visibility = View.VISIBLE
         connectImage.setImageResource(R.drawable.ic_vpn_key_white_24dp)
-        statusText.text = "Authorising... Your device should vibrate. Please tab the button on it."
+        statusText.text = "Authorising..."
         retryButton.visibility = View.INVISIBLE
         retryButton.isEnabled = false
     }
