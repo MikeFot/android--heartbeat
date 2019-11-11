@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.michaelfotiadis.heartbeat.repo.BluetoothRepo
 import com.michaelfotiadis.heartbeat.service.BluetoothServiceDispatcher
+import com.polidea.rxandroidble2.RxBleClient
 import javax.inject.Inject
 
 class BluetoothActivationViewModel(
@@ -14,12 +15,13 @@ class BluetoothActivationViewModel(
 ) : ViewModel() {
 
     val actionLiveData: LiveData<Action> = Transformations.map(
-        bluetoothStatusProvider.isConnectedLiveData
-    ) { isConnected ->
-        if (isConnected) {
-            Action.MOVE_TO_NEXT
-        } else {
-            Action.BLUETOOTH_UNAVAILABLE
+        bluetoothStatusProvider.bluetoothStateLiveData
+    ) { state ->
+        when (state) {
+            RxBleClient.State.BLUETOOTH_NOT_AVAILABLE,
+            RxBleClient.State.BLUETOOTH_NOT_ENABLED -> Action.BLUETOOTH_UNAVAILABLE
+            null -> Action.BLUETOOTH_UNAVAILABLE
+            else -> Action.MOVE_TO_NEXT
         }
     }
 

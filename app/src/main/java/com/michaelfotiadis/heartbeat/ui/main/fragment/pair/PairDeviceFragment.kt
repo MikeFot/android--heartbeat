@@ -78,8 +78,12 @@ internal class PairDeviceFragment : BaseNavFragment() {
             is Action.ConnectionDisconnected -> binder.showDisconnected()
             is Action.ConnectionConnected -> {
                 binder.showConnected()
-                viewModel.checkSerial()
+                viewModel.requestAuthorisation()
             }
+            is Action.Authorise -> {
+                viewModel.checkHeartRate()
+            }
+            Action.HeartRateNotified -> viewModel.checkHeartRate()
             Action.HeartRateIdle -> {
                 // NOOP
             }

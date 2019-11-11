@@ -1,11 +1,12 @@
 package com.michaelfotiadis.heartbeat.ui.main.fragment.bonded.viewmodel
 
 import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Transformations
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import com.michaelfotiadis.heartbeat.repo.BluetoothRepo
 import com.michaelfotiadis.heartbeat.core.livedata.SingleLiveEvent
+import com.michaelfotiadis.heartbeat.repo.BluetoothRepo
 import com.michaelfotiadis.heartbeat.service.BluetoothServiceDispatcher
 import com.michaelfotiadis.heartbeat.ui.main.fragment.bonded.model.UiBondedDevice
 import com.michaelfotiadis.heartbeat.ui.main.fragment.bonded.model.UiBondedDeviceMapper
@@ -18,10 +19,13 @@ class BondedDevicesViewModel(
 ) : ViewModel() {
 
     val devicesLiveData: LiveData<List<UiBondedDevice>> =
-        Transformations.map(
-            bluetoothStatusProvider.bondedDevicesLiveData,
-            uiBondedDeviceMapper::map
-        )
+        Transformations.switchMap(
+            bluetoothStatusProvider.bondedDevicesLiveData
+        ) { set ->
+            MutableLiveData<List<UiBondedDevice>>().apply {
+                postValue(uiBondedDeviceMapper.map(set))
+            }
+        }
     val actionLiveData = SingleLiveEvent<Action>()
 
     fun refreshBondedDevices() {

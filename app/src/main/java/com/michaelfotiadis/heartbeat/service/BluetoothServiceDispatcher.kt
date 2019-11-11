@@ -59,7 +59,14 @@ class BluetoothServiceDispatcher(context: Context) {
         }
     }
 
-    fun checkInfo() {
+    fun authorise() {
+        getDefaultIntent().also { intent ->
+            intent.action = BluetoothActions.ACTION_AUTHORISE
+            applicationContext.startService(intent)
+        }
+    }
+
+    fun checkHeartRate() {
         getDefaultIntent().also { intent ->
             intent.action = BluetoothActions.ACTION_CHECK_HEART_SERVICE
             applicationContext.startService(intent)

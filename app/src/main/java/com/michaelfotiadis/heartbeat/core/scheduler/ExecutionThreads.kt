@@ -8,7 +8,7 @@ import kotlinx.coroutines.Job
 import javax.inject.Inject
 
 class ExecutionThreads @Inject constructor() {
-    val bleScheduler = Schedulers.single()
+    val bleScheduler = Schedulers.io()
     val mainScheduler = AndroidSchedulers.mainThread()
     val jobScope = CoroutineScope(Job())
     val messageScope = CoroutineScope(Dispatchers.Main + Job())

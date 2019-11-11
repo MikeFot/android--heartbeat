@@ -4,12 +4,13 @@ import io.reactivex.disposables.Disposable
 
 interface Cancellable {
     fun cancel()
-    fun register(list: MutableList<Cancellable>)
+    fun isCancelled(): Boolean
 }
 
 class DisposableCancellable(private val disposable: Disposable) : Cancellable {
-    override fun register(list: MutableList<Cancellable>) {
-        list.add(this)
+
+    override fun isCancelled(): Boolean {
+        return disposable.isDisposed
     }
 
     override fun cancel() {

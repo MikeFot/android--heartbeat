@@ -2,21 +2,18 @@ package com.michaelfotiadis.heartbeat.service
 
 import android.app.Notification
 import android.app.NotificationManager
-import android.bluetooth.BluetoothAdapter
-import android.content.BroadcastReceiver
-import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
 import android.os.Binder
 import android.os.IBinder
 import androidx.lifecycle.LifecycleService
 import androidx.lifecycle.Observer
-import com.clj.fastble.data.BleDevice
 import com.michaelfotiadis.heartbeat.R
 import com.michaelfotiadis.heartbeat.bluetooth.BluetoothWrapper
+import com.michaelfotiadis.heartbeat.bluetooth.model.ConnectionStatus
 import com.michaelfotiadis.heartbeat.bluetooth.model.HeartRateStatus
 import com.michaelfotiadis.heartbeat.core.logger.AppLogger
 import com.michaelfotiadis.heartbeat.repo.BluetoothRepo
+import com.polidea.rxandroidble2.RxBleClient
 import dagger.android.AndroidInjection
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -32,7 +29,7 @@ class BluetoothService : LifecycleService() {
     }
 
     @Inject
-    lateinit var bluetoothStatusProvider: BluetoothRepo
+    lateinit var repo: BluetoothRepo
     @Inject
     lateinit var notificationFactory: ServiceNotificationFactory
     @Inject
@@ -46,39 +43,38 @@ class BluetoothService : LifecycleService() {
     // Binder given to clients
     private val binder = LocalBinder()
     private val scope = CoroutineScope(Job())
-    private var connectedDevice: BleDevice? = null
-
-    private val receiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context?, intent: Intent?) {
-            if (intent != null) {
-                when (intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR)) {
-                    BluetoothAdapter.STATE_OFF -> {
-                        bluetoothStatusProvider.isConnectedLiveData.postValue(false)
-                        updateNotification(
-                            notificationFactory.getEnableBluetoothNotification(applicationContext)
-                        )
-                    }
-                    BluetoothAdapter.STATE_ON -> {
-                        bluetoothStatusProvider.isConnectedLiveData.postValue(true)
-                        updateNotification(
-                            notificationFactory.getServiceStartedNotification(applicationContext)
-                        )
-                    }
-                }
-            }
-        }
-    }
 
     override fun onCreate() {
         AndroidInjection.inject(this)
         super.onCreate()
-        registerReceiver(receiver, IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED))
 
-        bluetoothStatusProvider.connectedDevice.observe(
-            this,
-            Observer(this::updateConnectedDevice)
+        updateNotification(
+            notificationFactory.getServiceStartedNotification(applicationContext)
         )
-        bluetoothStatusProvider.heartRateStatus.observe(
+
+        bluetoothWrapper.observeBluetoothState()
+
+        repo.connectionStatusLiveData.observe(this, Observer {status ->
+
+            if (status is ConnectionStatus.Failed) {
+                appLogger.get("BLE").e("Status ${status.exception.message}")
+            } else {
+                appLogger.get("BLE").w("Status $status")
+            }
+        })
+
+        repo.bluetoothStateLiveData.observe(this, Observer { state ->
+            when (state) {
+                RxBleClient.State.BLUETOOTH_NOT_AVAILABLE -> updateNotification(
+                    notificationFactory.getEnableBluetoothNotification(applicationContext)
+                )
+                else -> {
+                    // NOOP
+                }
+            }
+        })
+
+        repo.heartRateStatus.observe(
             this,
             Observer(this::updateHeartRateNotification)
         )
@@ -95,31 +91,9 @@ class BluetoothService : LifecycleService() {
         }
     }
 
-    private fun updateConnectedDevice(bleDevice: BleDevice?) {
-        if (bleDevice != null) {
-            updateNotification(
-                notificationFactory.getConnectedToDevice(
-                    this,
-                    bleDevice.name ?: ""
-                )
-            )
-        } else {
-            bluetoothWrapper.stopOperations()
-            connectedDevice?.let { device ->
-                updateNotification(
-                    notificationFactory.getDisconnectedFromDevice(
-                        this,
-                        device.name ?: ""
-                    )
-                )
-            }
-        }
-        connectedDevice = bleDevice
-    }
-
     override fun onDestroy() {
         disconnectDevice()
-        unregisterReceiver(receiver)
+        bluetoothWrapper.cleanup()
         try {
             scope.cancel()
         } catch (exception: CancellationException) {
@@ -131,15 +105,7 @@ class BluetoothService : LifecycleService() {
     private fun disconnectDevice() {
         bluetoothWrapper.cancelScan()
         bluetoothWrapper.stopPingHeartRate()
-
-        connectedDevice?.let { bleDevice ->
-            appLogger.get().d("Disconnected Device")
-            bluetoothWrapper.stopContinuousHeartRate(bleDevice) {
-                bluetoothWrapper.stopNotifyHeartService(bleDevice)
-                bluetoothWrapper.disconnect(bleDevice)
-                bluetoothStatusProvider.connectionStatusLiveData.postValue(null)
-            }
-        }
+        bluetoothWrapper.disconnect()
     }
 
     override fun onBind(intent: Intent): IBinder {
@@ -157,6 +123,7 @@ class BluetoothService : LifecycleService() {
     }
 
     override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
+        appLogger.get("BLE").d("ACTION ${intent.action}")
         when (intent.action) {
             BluetoothActions.ACTION_START -> handleActionStart()
             BluetoothActions.ACTION_STOP -> handleActionStop()
@@ -168,6 +135,7 @@ class BluetoothService : LifecycleService() {
                     BluetoothActions.EXTRA_MAC_ADDRESS
                 ) ?: ""
             )
+            BluetoothActions.ACTION_AUTHORISE -> requestAuthorisation()
             BluetoothActions.ACTION_CHECK_HEART_SERVICE -> checkDeviceHeartService()
             BluetoothActions.ACTION_SCAN_DEVICES -> scanForDevices()
             BluetoothActions.ACTION_DISCONNECT_DEVICE -> disconnectDevice()
@@ -198,17 +166,13 @@ class BluetoothService : LifecycleService() {
 
     private fun connectToMac(macAddress: String) {
         scope.launch {
-            bluetoothWrapper.connectToMac(
-                macAddress,
-                bluetoothStatusProvider.connectionStatusLiveData::postValue
-            )
+            bluetoothWrapper.connectToMacInitial(macAddress)
         }
     }
 
     private fun checkConnection() {
         scope.launch {
-            val isEnabled = bluetoothWrapper.isBluetoothEnabled()
-            bluetoothStatusProvider.isConnectedLiveData.postValue(isEnabled)
+            bluetoothWrapper.observeBluetoothState()
         }
     }
 
@@ -221,22 +185,25 @@ class BluetoothService : LifecycleService() {
     private fun refreshBondedDevices() {
         scope.launch {
             val bondedDevices = bluetoothWrapper.getBondedDevices()
-            bluetoothStatusProvider.bondedDevicesLiveData.postValue(bondedDevices)
+            repo.bondedDevicesLiveData.postValue(bondedDevices)
+        }
+    }
+
+    private fun requestAuthorisation() {
+        scope.launch {
+            bluetoothWrapper.authorise()
         }
     }
 
     private fun checkDeviceHeartService() {
         scope.launch {
-            bluetoothWrapper.askForSingleHeartRate(
-                connectedDevice,
-                bluetoothStatusProvider.heartRateStatus::postValue
-            )
+            bluetoothWrapper.askForSingleHeartRate()
         }
     }
 
     private fun scanForDevices() {
         scope.launch {
-            bluetoothWrapper.scan(bluetoothStatusProvider.scanStatusLiveData::postValue)
+            bluetoothWrapper.scan(repo.scanStatusLiveData::postValue)
         }
     }
 }

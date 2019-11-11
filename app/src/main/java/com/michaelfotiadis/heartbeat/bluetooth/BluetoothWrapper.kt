@@ -2,35 +2,36 @@ package com.michaelfotiadis.heartbeat.bluetooth
 
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
+import android.bluetooth.BluetoothGatt
 import android.content.Context
 import android.content.Intent
 import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
-import com.clj.fastble.BleManager
 import com.clj.fastble.data.BleDevice
 import com.michaelfotiadis.heartbeat.bluetooth.factory.BluetoothInteractorFactory
 import com.michaelfotiadis.heartbeat.bluetooth.interactor.Cancellable
-import com.michaelfotiadis.heartbeat.bluetooth.model.ConnectionStatus
 import com.michaelfotiadis.heartbeat.bluetooth.model.HeartRateStatus
 import com.michaelfotiadis.heartbeat.bluetooth.model.ScanStatus
-import com.michaelfotiadis.heartbeat.core.logger.AppLogger
-
-private const val TAG = "BLE"
+import com.michaelfotiadis.heartbeat.repo.BluetoothRepo
 
 class BluetoothWrapper(
-    private val bleManager: BleManager,
-    private val factory: BluetoothInteractorFactory,
-    private val appLogger: AppLogger
+    private val bluetoothRepo: BluetoothRepo,
+    private val factory: BluetoothInteractorFactory
 ) {
 
+    private var bluetoothGatt: BluetoothGatt? = null
+
     private val operations = mutableListOf<Cancellable>()
+
+    private var stateCancellable: Cancellable? = null
+    private var connectionCancellable: Cancellable? = null
     private var heartRateOperation: Cancellable? = null
     private var continuousHeartRateOperation: Cancellable? = null
 
-    fun isBluetoothEnabled(): Boolean {
-        return bleManager.bluetoothAdapter.isEnabled
+    suspend fun isBluetoothEnabled(): Boolean {
+        return factory.isBluetoothOnInteractor.execute()
     }
 
-    fun askToEnableBluetooth(context: Context) {
+    suspend fun askToEnableBluetooth(context: Context) {
         if (!isBluetoothEnabled()) {
             context.startActivity(
                 Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
@@ -43,25 +44,49 @@ class BluetoothWrapper(
         return factory.getBondedDevicesInteractor.execute()
     }
 
-    fun connectToMac(macAddress: String, callback: (ConnectionStatus) -> Unit) {
+    fun observeBluetoothState() {
+        stateCancellable?.cancel()
+        stateCancellable = factory.observeBluetoothInteractor
+            .execute(bluetoothRepo.bluetoothStateLiveData::postValue)
+    }
+
+    fun connectToMacInitial(macAddress: String) {
         stopOperations()
-        factory.connectToMacInteractor
-            .execute(macAddress, callback)
-            .register(operations)
+        connectionCancellable?.cancel()
+        connectionCancellable = factory.connectToMacInteractor.execute(
+            macAddress,
+            true,
+            bluetoothRepo.connectionStatusLiveData::postValue
+        )
+    }
+
+    fun authorise() {
+        val currentValue = bluetoothRepo.connectionStatusLiveData.value
+        val connection = currentValue?.rxBleConnection
+        if (currentValue != null && connection != null) {
+            register(
+                factory.authoriseInteractor.execute(
+                    currentValue.rxBleDevice,
+                    connection,
+                    bluetoothRepo.connectionStatusLiveData::postValue
+                )
+            )
+        } else {
+            throw IllegalStateException("Null connection!")
+        }
     }
 
     fun scan(callback: (ScanStatus) -> Unit) {
         stopOperations()
-        appLogger.get(TAG).d("Scanning")
-        factory.scanDevicesInteractor
-            .execute(callback)
-            .register(operations)
+        register(
+            factory.scanDevicesInteractor.execute(callback)
+        )
     }
 
     fun startPingHeartRate(bleDevice: BleDevice) {
         heartRateOperation?.cancel()
         heartRateOperation = factory.pingHeartRateInteractor.execute(bleDevice)
-            .also { cancellable -> operations.add(cancellable) }
+            .also { cancellable -> register(cancellable) }
     }
 
     fun stopPingHeartRate() {
@@ -69,53 +94,63 @@ class BluetoothWrapper(
         heartRateOperation = null
     }
 
-    fun askForSingleHeartRate(bleDevice: BleDevice?, callback: (HeartRateStatus) -> Unit) {
-        if (bleDevice == null) {
-            callback.invoke(HeartRateStatus.Failed("No device connected"))
+    fun askForSingleHeartRate() {
+        val currentValue = bluetoothRepo.connectionStatusLiveData.value
+        val connection = currentValue?.rxBleConnection
+        if (currentValue != null && connection != null) {
+            register(
+                factory.measureSingleHeartRateInteractor.execute(connection) {
+                    bluetoothRepo.heartRateStatus::postValue
+                }
+            )
         } else {
-            factory.measureSingleHeartRateInteractor.execute(bleDevice, callback)
-                .register(operations)
+            throw IllegalStateException("Null connection!")
         }
     }
 
     fun stopContinuousHeartRate(bleDevice: BleDevice, callback: () -> Unit) {
         if (continuousHeartRateOperation != null) {
-            factory.stopHeartRateMeasurementInteractor
-                .execute(bleDevice, callback)
-                .register(operations)
+            register(
+                factory.stopHeartRateMeasurementInteractor.execute(bleDevice, callback)
+            )
         } else {
             callback.invoke()
         }
     }
 
-    private fun startNotifyHeartService(bleDevice: BleDevice, callback: (HeartRateStatus) -> Unit) {
-        factory.startNotifyHeartServiceInteractor
-            .execute(bleDevice, callback)
-            .register(operations)
+    fun startNotifyHeartService(bleDevice: BleDevice, callback: (HeartRateStatus) -> Unit) {
+        register(
+            factory.startNotifyHeartServiceInteractor.execute(bleDevice, callback)
+        )
     }
 
     fun stopNotifyHeartService(bleDevice: BleDevice) {
-        factory.stopNotifyHeartServiceInteractor
-            .execute(bleDevice)
-            .register(operations)
+        register(
+            factory.stopNotifyHeartServiceInteractor.execute(bleDevice)
+        )
     }
 
     fun cancelScan() {
-        appLogger.get(TAG).d("Cancel Scan")
-        factory.cancelScanInteractor
-            .execute()
-            .register(operations)
+        register(
+            factory.cancelScanInteractor.execute()
+        )
     }
 
-    fun disconnect(bleDevice: BleDevice) {
-        appLogger.get(TAG).d("Disconnect Device '${bleDevice.name}'")
-        factory.disconnectDeviceInteractor
-            .execute(bleDevice)
-            .register(operations)
+    fun disconnect() {
+        connectionCancellable?.cancel()
     }
 
     fun stopOperations() {
-        operations.forEach { cancellable -> cancellable.cancel() }
-        operations.clear()
+        /*operations.forEach { cancellable -> cancellable.cancel() }
+        operations.clear()*/
+    }
+
+    fun cleanup() {
+        factory.cleanupBluetoothOnInteractor.execute()
+        stateCancellable?.cancel()
+    }
+
+    private fun register(cancellable: Cancellable) {
+        operations.add(cancellable)
     }
 }

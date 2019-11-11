@@ -16,4 +16,24 @@ class MiServices @Inject constructor() {
         val dataContinuousMeasurement = byteArrayOf(0x15, 0x01, 0x01)
     }
 
+    val authorisationBytes = byteArrayOf(
+        0x01,
+        0x8,
+        0x30,
+        0x31,
+        0x32,
+        0x33,
+        0x34,
+        0x35,
+        0x36,
+        0x37,
+        0x38,
+        0x39,
+        0x40,
+        0x41,
+        0x42,
+        0x43,
+        0x44,
+        0x45
+    )
 }

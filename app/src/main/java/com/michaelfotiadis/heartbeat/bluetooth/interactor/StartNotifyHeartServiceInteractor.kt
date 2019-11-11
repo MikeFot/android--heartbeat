@@ -8,13 +8,10 @@ import com.michaelfotiadis.heartbeat.bluetooth.constants.MiServices
 import com.michaelfotiadis.heartbeat.bluetooth.model.HeartRateStatus
 import com.michaelfotiadis.heartbeat.core.scheduler.ExecutionThreads
 import com.michaelfotiadis.heartbeat.repo.MessageRepo
-import io.reactivex.BackpressureStrategy
 import io.reactivex.Observable
 import org.reactivestreams.Subscriber
 import java.util.*
 import java.util.concurrent.TimeUnit
-
-private const val TAG = "BLE"
 
 class StartNotifyHeartServiceInteractor(
     private val bleManager: BleManager,
@@ -24,6 +21,7 @@ class StartNotifyHeartServiceInteractor(
 ) {
 
     fun execute(bleDevice: BleDevice, callback: (HeartRateStatus) -> Unit): Cancellable {
+
         val disposable = Observable.fromPublisher<HeartRateStatus> { publisher ->
             bleManager.notify(
                 bleDevice,
@@ -32,8 +30,8 @@ class StartNotifyHeartServiceInteractor(
                 NotifyCallback(publisher, messageRepo)
             )
         }
-            .toFlowable(BackpressureStrategy.LATEST)
-            .sample(1, TimeUnit.SECONDS)
+            .delaySubscription(1, TimeUnit.SECONDS)
+            .delay(1, TimeUnit.SECONDS)
             .subscribeOn(executionThreads.bleScheduler)
             .doOnNext(callback::invoke)
             .subscribe()
@@ -47,7 +45,7 @@ class StartNotifyHeartServiceInteractor(
         BleNotifyCallback() {
         override fun onCharacteristicChanged(data: ByteArray?) {
             val message = Arrays.toString(data) ?: ""
-            messageRepo.log("DATA: $message")
+            messageRepo.log("Notify DATA: $message")
             if (data != null && data.size >= 2) {
                 val heartRate = data[1]
                 publisher.onNext(HeartRateStatus.Updated(heartRate.toInt()))
@@ -55,8 +53,10 @@ class StartNotifyHeartServiceInteractor(
         }
 
         override fun onNotifyFailure(exception: BleException?) {
-            messageRepo.log("EX: ${exception?.description}")
-            publisher.onNext(HeartRateStatus.Failed(exception?.description ?: "Failed to notify heart rate"))
+            messageRepo.logError("Notify EX: ${exception?.description}")
+            /*publisher.onNext(
+                HeartRateStatus.Failed(exception)
+            )*/
         }
 
         override fun onNotifySuccess() {

@@ -6,5 +6,5 @@ sealed class HeartRateStatus {
 
     data class Updated(val heartRate: Int) : HeartRateStatus()
 
-    data class Failed(val error: String) : HeartRateStatus()
+    data class Failed(val throwable: Throwable) : HeartRateStatus()
 }

@@ -1,72 +1,110 @@
 package com.michaelfotiadis.heartbeat.bluetooth.interactor
 
-import android.bluetooth.BluetoothGatt
-import com.clj.fastble.BleManager
-import com.clj.fastble.callback.BleGattCallback
-import com.clj.fastble.data.BleDevice
-import com.clj.fastble.exception.BleException
-import com.clj.fastble.exception.OtherException
+import com.michaelfotiadis.heartbeat.bluetooth.constants.MiServices
 import com.michaelfotiadis.heartbeat.bluetooth.model.ConnectionStatus
+import com.michaelfotiadis.heartbeat.core.model.Optional
 import com.michaelfotiadis.heartbeat.core.scheduler.ExecutionThreads
 import com.michaelfotiadis.heartbeat.repo.MessageRepo
+import com.polidea.rxandroidble2.RxBleClient
+import com.polidea.rxandroidble2.RxBleConnection
+import com.polidea.rxandroidble2.RxBleDevice
+import com.polidea.rxandroidble2.Timeout
 import io.reactivex.Observable
-import org.reactivestreams.Subscriber
+import io.reactivex.functions.BiFunction
+import java.util.*
+import java.util.concurrent.TimeUnit
 
 class ConnectToMacInteractor(
-    private val bleManager: BleManager,
+    private val rxBleClient: RxBleClient,
+    private val miServices: MiServices,
     private val messageRepo: MessageRepo,
     private val executionThreads: ExecutionThreads
 ) {
 
     fun execute(
         macAddress: String,
+        isHeartRateServiceRequired: Boolean,
         callback: (ConnectionStatus) -> Unit
     ): DisposableCancellable {
 
-        val disposable = Observable.fromPublisher<ConnectionStatus> { publisher ->
-            bleManager.connect(macAddress, ConnectionCallback(publisher))
-        }
-            .onErrorReturn { throwable ->
-                ConnectionStatus.Failed(
-                    null,
-                    OtherException(throwable.message)
-                )
+        val device = rxBleClient.getBleDevice(macAddress)
+        val operation1 = device
+            .establishConnection(false, Timeout(10, TimeUnit.SECONDS))
+            .map { rxBleClient -> Optional.of(rxBleClient) }
+            .startWith(Optional.empty())
+
+        val operation2 = device.observeConnectionStateChanges()
+
+        val disposable = Observable.combineLatest(
+            operation1,
+            operation2,
+            BiFunction<Optional<RxBleConnection>, RxBleConnection.RxBleConnectionState, ConnectionStatus>
+            { connectionOptional, state ->
+                mapResult(state, device, connectionOptional, isHeartRateServiceRequired)
             }
+        )
+            .onErrorReturn { throwable -> ConnectionStatus.Failed(device, throwable) }
             .subscribeOn(executionThreads.bleScheduler)
-            .doOnSubscribe { messageRepo.log("Attempting to connect to $macAddress") }
-            .doOnComplete { messageRepo.log("Connection completed") }
-            .doOnNext(callback::invoke)
+            .doOnNext(callback)
             .subscribe()
         return DisposableCancellable(disposable)
     }
 
-    inner class ConnectionCallback(private val publisher: Subscriber<in ConnectionStatus>) :
-        BleGattCallback() {
-        override fun onStartConnect() {
-            messageRepo.log("Connection Started")
-            publisher.onNext(ConnectionStatus.Started)
+    private fun mapResult(
+        state: RxBleConnection.RxBleConnectionState,
+        device: RxBleDevice,
+        connectionOptional: Optional<RxBleConnection>,
+        isHeartRateServiceRequired: Boolean
+    ): ConnectionStatus {
+        return when (state) {
+            RxBleConnection.RxBleConnectionState.CONNECTING -> {
+                messageRepo.log("Connecting to ${device.macAddress}")
+                ConnectionStatus.Connecting(device)
+            }
+            RxBleConnection.RxBleConnectionState.CONNECTED ->
+                if (connectionOptional.isPresent()) {
+                    val connection = connectionOptional.get()
+                    if (isHeartRateServiceRequired) {
+                        messageRepo.log("Connected to ${device.macAddress} and checking for heart rate service")
+                        checkForHeartRateService(connection, device)
+                    } else {
+                        messageRepo.log("Connecting to ${device.macAddress} blindly")
+                        ConnectionStatus.Connected(device, connection)
+                    }
+                } else {
+                    messageRepo.log("Connecting to ${device.macAddress} but connection not received")
+                    ConnectionStatus.Connecting(device)
+                }
+            RxBleConnection.RxBleConnectionState.DISCONNECTED -> {
+                messageRepo.log("Disconnected from ${device.macAddress}")
+                ConnectionStatus.Disconnected(device)
+            }
+            RxBleConnection.RxBleConnectionState.DISCONNECTING -> {
+                messageRepo.log("Disconnecting from ${device.macAddress}")
+                ConnectionStatus.Disconnecting(device)
+            }
         }
+    }
 
-        override fun onDisConnected(
-            isActiveDisConnected: Boolean,
-            device: BleDevice?,
-            gatt: BluetoothGatt?,
-            status: Int
-        ) {
-            messageRepo.log("Disconnected from device ${device?.mac}")
-            publisher.onNext(
-                ConnectionStatus.Disconnected(isActiveDisConnected, device, gatt, status)
-            )
-        }
-
-        override fun onConnectSuccess(device: BleDevice?, gatt: BluetoothGatt?, status: Int) {
-            messageRepo.log("Connected to device ${device?.mac}")
-            publisher.onNext(ConnectionStatus.Connected(device, gatt, status))
-        }
-
-        override fun onConnectFail(device: BleDevice?, exception: BleException?) {
-            messageRepo.log("Connection failed with device ${device?.mac} with error ${exception?.description}")
-            publisher.onNext(ConnectionStatus.Failed(device, exception))
+    private fun checkForHeartRateService(
+        connection: RxBleConnection,
+        device: RxBleDevice
+    ): ConnectionStatus {
+        val heartRateService = connection
+            .discoverServices(5, TimeUnit.SECONDS)
+            .flatMap { services ->
+                services.getService(UUID.fromString(miServices.heartRateService.service))
+            }
+            .map { service -> Optional.of(service) }
+            .onErrorReturn { Optional.empty() }
+            .subscribeOn(executionThreads.bleScheduler)
+            .blockingGet()
+        return if (heartRateService.isPresent()) {
+            messageRepo.log("Connecting to ${device.macAddress} and found heart rate service")
+            ConnectionStatus.Connected(device, connection)
+        } else {
+            messageRepo.log("Connecting to ${device.macAddress} but missing heart rate service")
+            ConnectionStatus.ConnectedNoHeartRate(device, connection)
         }
     }
 }

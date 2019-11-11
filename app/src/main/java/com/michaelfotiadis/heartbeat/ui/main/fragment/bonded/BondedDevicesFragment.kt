@@ -26,7 +26,7 @@ internal class BondedDevicesFragment : BaseNavFragment() {
         ViewModelProviders.of(this, factory).get(BondedDevicesViewModel::class.java)
     }
 
-    private lateinit var adapter: BluetoothBondedDevicesAdapter
+    private var adapter: BluetoothBondedDevicesAdapter? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -37,7 +37,7 @@ internal class BondedDevicesFragment : BaseNavFragment() {
     }
 
     override fun onDestroyView() {
-        adapter.listener = null
+        adapter?.listener = null
         super.onDestroyView()
     }
 
@@ -54,9 +54,10 @@ internal class BondedDevicesFragment : BaseNavFragment() {
     }
 
     private fun bindViews() {
-        adapter = BluetoothBondedDevicesAdapter()
-        adapter.listener = { device ->
-            viewModel.onDeviceSelected(device)
+        adapter = BluetoothBondedDevicesAdapter().apply {
+            listener = { device ->
+                viewModel.onDeviceSelected(device)
+            }
         }
         bonded_devices_recycler_view.adapter = adapter
         bonded_devices_recycler_view.addItemDecoration(
@@ -71,7 +72,9 @@ internal class BondedDevicesFragment : BaseNavFragment() {
     }
 
     private fun setupObservers() {
-        viewModel.devicesLiveData.observe(viewLifecycleOwner, Observer(adapter::submitList))
+        viewModel.devicesLiveData.observe(
+            viewLifecycleOwner,
+            Observer { list -> adapter?.submitList(list) })
         viewModel.actionLiveData.observe(viewLifecycleOwner, Observer(this::onActionReceived))
     }
 

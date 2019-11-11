@@ -1,28 +1,36 @@
 package com.michaelfotiadis.heartbeat.bluetooth.model
 
-import android.bluetooth.BluetoothGatt
-import com.clj.fastble.data.BleDevice
-import com.clj.fastble.exception.BleException
+import com.polidea.rxandroidble2.RxBleConnection
+import com.polidea.rxandroidble2.RxBleDevice
 
-sealed class ConnectionStatus {
+sealed class ConnectionStatus(
+    val rxBleDevice: RxBleDevice,
+    val rxBleConnection: RxBleConnection? = null
+) {
 
-    object Started : ConnectionStatus()
+    class Connecting(rxBleDevice: RxBleDevice) : ConnectionStatus(rxBleDevice)
 
-    data class Connected(
-        val bleDevice: BleDevice?,
-        val gatt: BluetoothGatt?,
-        val status: Int
-    ) : ConnectionStatus()
+    class Connected(
+        rxBleDevice: RxBleDevice,
+        rxBleConnection: RxBleConnection
+    ) : ConnectionStatus(rxBleDevice, rxBleConnection)
 
-    data class Disconnected(
-        val isActiveDisConnected: Boolean,
-        val device: BleDevice?,
-        val gatt: BluetoothGatt?,
-        val status: Int
-    ) : ConnectionStatus()
+    class Authorised(
+        rxBleDevice: RxBleDevice,
+        rxBleConnection: RxBleConnection
+    ) : ConnectionStatus(rxBleDevice, rxBleConnection)
 
-    data class Failed(
-        val bleDevice: BleDevice?,
-        val exception: BleException?
-    ) : ConnectionStatus()
+    class ConnectedNoHeartRate(
+        rxBleDevice: RxBleDevice,
+        rxBleConnection: RxBleConnection
+    ) : ConnectionStatus(rxBleDevice, rxBleConnection)
+
+    class Disconnecting(rxBleDevice: RxBleDevice) : ConnectionStatus(rxBleDevice)
+
+    class Disconnected(rxBleDevice: RxBleDevice) : ConnectionStatus(rxBleDevice)
+
+    class Failed(
+        rxBleDevice: RxBleDevice,
+        val exception: Throwable
+    ) : ConnectionStatus(rxBleDevice)
 }

@@ -7,10 +7,10 @@ import com.clj.fastble.scan.BleScanRuleConfig
 import com.michaelfotiadis.heartbeat.bluetooth.BluetoothWrapper
 import com.michaelfotiadis.heartbeat.bluetooth.constants.MiServices
 import com.michaelfotiadis.heartbeat.bluetooth.factory.BluetoothInteractorFactory
-import com.michaelfotiadis.heartbeat.core.logger.AppLogger
 import com.michaelfotiadis.heartbeat.core.scheduler.ExecutionThreads
 import com.michaelfotiadis.heartbeat.repo.BluetoothRepo
 import com.michaelfotiadis.heartbeat.repo.MessageRepo
+import com.polidea.rxandroidble2.RxBleClient
 import dagger.Module
 import dagger.Provides
 import java.util.concurrent.TimeUnit
@@ -18,6 +18,11 @@ import javax.inject.Singleton
 
 @Module
 internal class BluetoothModule {
+
+    @Provides
+    fun providesRxBleClient(application: Application): RxBleClient {
+        return RxBleClient.create(application)
+    }
 
     @Provides
     @Singleton
@@ -41,26 +46,28 @@ internal class BluetoothModule {
 
     @Provides
     fun provideBluetoothInteractorFactory(
+        rxBleClient: RxBleClient,
         bleManager: BleManager,
         miServices: MiServices,
         messageRepo: MessageRepo,
         executionThreads: ExecutionThreads
     ): BluetoothInteractorFactory {
-        return BluetoothInteractorFactory(bleManager, miServices, messageRepo, executionThreads)
+        return BluetoothInteractorFactory(
+            rxBleClient,
+            bleManager,
+            miServices,
+            messageRepo,
+            executionThreads
+        )
     }
 
     @Provides
     @Singleton
     fun providesBluetoothWrapper(
-        bleManager: BleManager,
-        bluetoothInteractorFactory: BluetoothInteractorFactory,
-        appLogger: AppLogger
+        bluetoothRepo: BluetoothRepo,
+        bluetoothInteractorFactory: BluetoothInteractorFactory
     ): BluetoothWrapper {
-        return BluetoothWrapper(
-            bleManager,
-            bluetoothInteractorFactory,
-            appLogger
-        )
+        return BluetoothWrapper(bluetoothRepo, bluetoothInteractorFactory)
     }
 
     @Provides
@@ -68,5 +75,4 @@ internal class BluetoothModule {
     fun providesBluetoothStatusProvider(): BluetoothRepo {
         return BluetoothRepo()
     }
-
 }

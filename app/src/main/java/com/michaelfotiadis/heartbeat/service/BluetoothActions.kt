@@ -7,6 +7,7 @@ object BluetoothActions {
     const val ACTION_REFRESH_BONDED_DEVICES = "action.refresh_bonded_devices"
     const val ACTION_ENABLE_BLUETOOTH = "action.enable_bluetooth"
     const val ACTION_CONNECT_TO_MAC = "action.connect_to_mac"
+    const val ACTION_AUTHORISE = "action.authorise"
     const val EXTRA_MAC_ADDRESS = "extra.mac_address"
     const val ACTION_CHECK_HEART_SERVICE = "action.check_heart_service"
     const val ACTION_SCAN_DEVICES = "action.scan_devices"
