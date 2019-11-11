@@ -9,7 +9,7 @@
 
     <TextView
         android:id="@+id/scan_devices_info_text"
-        style="@style/AppTextView.Header"
+        android:textAppearance="?attr/textAppearanceSubtitle1"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/margin_8dp"
