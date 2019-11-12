@@ -19,6 +19,7 @@ class PairDeviceViewModel(
                 BluetoothRepo.Action.Connecting -> Action.CONNECTING
                 is BluetoothRepo.Action.Connected -> Action.CONNECTED
                 is BluetoothRepo.Action.Disconnected -> Action.DISCONNECTED
+                BluetoothRepo.Action.ConnectionFailed -> Action.CONNECTION_FAILED
                 BluetoothRepo.Action.ServicesDiscovered -> Action.SERVICES_DISCOVERED
                 BluetoothRepo.Action.AuthorisationNotified -> Action.AUTH_NOTIFIED
                 BluetoothRepo.Action.AuthorisationStepOne -> Action.AUTH_STEP_ONE
@@ -40,6 +41,7 @@ enum class Action {
     CONNECTING,
     CONNECTED,
     DISCONNECTED,
+    CONNECTION_FAILED,
     SERVICES_DISCOVERED,
     AUTH_NOTIFIED,
     AUTH_STEP_ONE,

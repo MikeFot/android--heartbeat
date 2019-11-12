@@ -1,10 +1,9 @@
-package com.michaelfotiadis.heartbeat.bluetooth.interactor.review
+package com.michaelfotiadis.heartbeat.bluetooth.interactor
 
 import com.clj.fastble.BleManager
 import com.clj.fastble.callback.BleScanCallback
 import com.clj.fastble.data.BleDevice
-import com.michaelfotiadis.heartbeat.bluetooth.interactor.Cancellable
-import com.michaelfotiadis.heartbeat.bluetooth.interactor.DisposableCancellable
+import com.michaelfotiadis.heartbeat.bluetooth.model.DeviceResult
 import com.michaelfotiadis.heartbeat.bluetooth.model.ScanStatus
 import com.michaelfotiadis.heartbeat.core.scheduler.ExecutionThreads
 import com.michaelfotiadis.heartbeat.repo.MessageRepo
@@ -31,11 +30,13 @@ class ScanForDevicesInteractor(
 
     inner class ScanCallback(private val publisher: Subscriber<in ScanStatus>) : BleScanCallback() {
 
-        private val devices = mutableListOf<BleDevice>()
+        private val devices = mutableListOf<DeviceResult>()
 
         override fun onScanFinished(scanResultList: List<BleDevice>?) {
             messageRepo.log("On Scan Finished with ${scanResultList?.size} items")
-            publisher.onNext(ScanStatus.Finished(scanResultList ?: listOf()))
+            devices.clear()
+            devices.addAll(DeviceResult.fromBleDevices(scanResultList ?: listOf()))
+            publisher.onNext(ScanStatus.Finished(devices))
             publisher.onComplete()
         }
 
@@ -47,7 +48,7 @@ class ScanForDevicesInteractor(
         override fun onScanning(bleDevice: BleDevice?) {
             if (bleDevice != null) {
                 messageRepo.log("On Scanning '${bleDevice.name} at address '${bleDevice.mac}'")
-                devices.add(bleDevice)
+                devices.add(DeviceResult.fromBleDevice(bleDevice))
                 publisher.onNext(ScanStatus.Scanning(devices))
             } else {
                 messageRepo.log("On Scanning null device")

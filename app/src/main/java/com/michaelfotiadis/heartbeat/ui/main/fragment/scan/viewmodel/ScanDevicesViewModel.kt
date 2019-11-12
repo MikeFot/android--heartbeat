@@ -4,8 +4,8 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.Transformations
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import com.michaelfotiadis.heartbeat.repo.BluetoothRepo
 import com.michaelfotiadis.heartbeat.bluetooth.model.ScanStatus
+import com.michaelfotiadis.heartbeat.repo.BluetoothRepo
 import com.michaelfotiadis.heartbeat.service.BluetoothServiceDispatcher
 import com.michaelfotiadis.heartbeat.ui.main.fragment.bonded.model.UiBondedDevice
 import com.michaelfotiadis.heartbeat.ui.main.fragment.bonded.model.UiBondedDeviceMapper
@@ -21,10 +21,8 @@ class ScanDevicesViewModel(
         Transformations.map(bluetoothStatusProvider.scanStatusLiveData) { scanStatus ->
             when (scanStatus) {
                 ScanStatus.Started -> listOf()
-                is ScanStatus.Scanning -> uiBondedDeviceMapper.map(scanStatus.bleDevices
-                    .map { bleDevice -> bleDevice.device })
-                is ScanStatus.Finished -> uiBondedDeviceMapper.map(scanStatus.bleDevices
-                    .map { bleDevice -> bleDevice.device })
+                is ScanStatus.Scanning -> uiBondedDeviceMapper.map(scanStatus.bleDevices.toSet())
+                is ScanStatus.Finished -> uiBondedDeviceMapper.map(scanStatus.bleDevices.toSet())
             }
         }
 
@@ -41,11 +39,6 @@ class ScanDevicesViewModel(
     fun scanForDevices() {
         intentDispatcher.scanForDevices()
     }
-
-    fun onDeviceSelected(uiBondedDevice: UiBondedDevice) {
-
-    }
-
 }
 
 enum class Action {

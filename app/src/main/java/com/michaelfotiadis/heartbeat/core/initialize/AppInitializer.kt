@@ -10,9 +10,6 @@ import com.michaelfotiadis.heartbeat.core.logger.AppLogger
 import com.michaelfotiadis.heartbeat.core.notification.NotificationChannelInitializer
 import com.michaelfotiadis.heartbeat.core.toast.ToastShower
 import com.michaelfotiadis.heartbeat.repo.MessageRepo
-import com.polidea.rxandroidble2.LogConstants
-import com.polidea.rxandroidble2.LogOptions
-import com.polidea.rxandroidble2.RxBleClient
 import java.util.concurrent.atomic.AtomicBoolean
 
 private const val TAG = "BLE"
@@ -36,10 +33,6 @@ class AppInitializer(
         initToasty()
         initStetho(application)
         observeMessages()
-
-        if (featureFlagProvider.isDebugEnabled) {
-            RxBleClient.updateLogOptions(LogOptions.Builder().setLogLevel(LogConstants.DEBUG).build())
-        }
 
         isInitialized.set(true)
     }

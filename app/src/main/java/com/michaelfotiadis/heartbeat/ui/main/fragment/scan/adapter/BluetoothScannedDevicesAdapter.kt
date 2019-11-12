@@ -31,6 +31,7 @@ class BluetoothScannedDevicesAdapter :
             descriptionTextView.text = device.name
             typeTextView.text = device.deviceType.toString()
             bondedTextView.text = device.bondedStatus.toString()
+            rssiTextView.text = "RSSI: ${device.rssi}"
             holder.itemView.setOnClickListener { listener?.invoke(device) }
         }
     }
@@ -40,6 +41,7 @@ class BluetoothScannedDevicesAdapter :
         val descriptionTextView: TextView = rootView.findViewById(R.id.device_content)
         val typeTextView: TextView = rootView.findViewById(R.id.device_type)
         val bondedTextView: TextView = rootView.findViewById(R.id.device_bonded)
+        val rssiTextView: TextView = rootView.findViewById(R.id.device_rssi)
     }
 
     class DiffCallback : DiffUtil.ItemCallback<UiBondedDevice>() {

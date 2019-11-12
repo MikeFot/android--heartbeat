@@ -6,7 +6,7 @@ sealed class ScanStatus {
 
     object Started : ScanStatus()
 
-    data class Scanning(val bleDevices: List<BleDevice>) : ScanStatus()
+    data class Scanning(val bleDevices: List<DeviceResult>) : ScanStatus()
 
-    data class Finished(val bleDevices: List<BleDevice>) : ScanStatus()
+    data class Finished(val bleDevices: List<DeviceResult>) : ScanStatus()
 }

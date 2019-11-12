@@ -1,4 +1,4 @@
-package com.michaelfotiadis.heartbeat.ui.main.fragment.activation
+package com.michaelfotiadis.heartbeat.ui.main.fragment.activation.viewmodel
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.Transformations
@@ -6,7 +6,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.michaelfotiadis.heartbeat.repo.BluetoothRepo
 import com.michaelfotiadis.heartbeat.service.BluetoothServiceDispatcher
-import com.polidea.rxandroidble2.RxBleClient
 import javax.inject.Inject
 
 class BluetoothActivationViewModel(
@@ -15,18 +14,17 @@ class BluetoothActivationViewModel(
 ) : ViewModel() {
 
     val actionLiveData: LiveData<Action> = Transformations.map(
-        bluetoothStatusProvider.bluetoothStateLiveData
-    ) { state ->
-        when (state) {
-            RxBleClient.State.BLUETOOTH_NOT_AVAILABLE,
-            RxBleClient.State.BLUETOOTH_NOT_ENABLED -> Action.BLUETOOTH_UNAVAILABLE
-            null -> Action.BLUETOOTH_UNAVAILABLE
-            else -> Action.MOVE_TO_NEXT
+        bluetoothStatusProvider.bluetoothConnectionLiveData
+    ) { enabled ->
+        if (enabled) {
+            Action.MOVE_TO_NEXT
+        } else {
+            Action.BLUETOOTH_UNAVAILABLE
         }
     }
 
-    fun checkStatus() {
-        intentDispatcher.checkBluetoothConnection()
+    fun checkConnection() {
+        intentDispatcher.checkConnection()
     }
 
     fun enableBluetooth() {
@@ -45,6 +43,9 @@ class BluetoothActivationViewModelFactory @Inject constructor(
 ) : ViewModelProvider.Factory {
     override fun <T : ViewModel?> create(modelClass: Class<T>): T {
         @Suppress("UNCHECKED_CAST")
-        return BluetoothActivationViewModel(bluetoothStatusProvider, intentDispatcher) as T
+        return BluetoothActivationViewModel(
+            bluetoothStatusProvider,
+            intentDispatcher
+        ) as T
     }
 }

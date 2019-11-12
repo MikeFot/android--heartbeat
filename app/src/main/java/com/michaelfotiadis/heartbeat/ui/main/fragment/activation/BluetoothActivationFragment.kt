@@ -4,13 +4,16 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProviders
 import com.michaelfotiadis.heartbeat.R
 import com.michaelfotiadis.heartbeat.core.toast.ToastShower
 import com.michaelfotiadis.heartbeat.ui.base.BaseNavFragment
-import javax.inject.Inject
+import com.michaelfotiadis.heartbeat.ui.main.fragment.activation.viewmodel.Action
+import com.michaelfotiadis.heartbeat.ui.main.fragment.activation.viewmodel.BluetoothActivationViewModel
+import com.michaelfotiadis.heartbeat.ui.main.fragment.activation.viewmodel.BluetoothActivationViewModelFactory
 import kotlinx.android.synthetic.main.bluetooth_activation_fragment.*
+import javax.inject.Inject
 
 internal class BluetoothActivationFragment : BaseNavFragment() {
 
@@ -19,9 +22,7 @@ internal class BluetoothActivationFragment : BaseNavFragment() {
     @Inject
     lateinit var toastShower: ToastShower
 
-    private val viewModel: BluetoothActivationViewModel by lazy {
-        ViewModelProviders.of(this, factory).get(BluetoothActivationViewModel::class.java)
-    }
+    private val viewModel by viewModels<BluetoothActivationViewModel>({ this }, { factory })
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -39,7 +40,11 @@ internal class BluetoothActivationFragment : BaseNavFragment() {
         bluetooth_activate_button.setOnClickListener {
             viewModel.enableBluetooth()
         }
-        viewModel.checkStatus()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        viewModel.checkConnection()
     }
 
     private fun processAction(action: Action?) {

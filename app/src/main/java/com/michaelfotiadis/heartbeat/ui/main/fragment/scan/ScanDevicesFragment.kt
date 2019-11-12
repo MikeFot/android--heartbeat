@@ -4,11 +4,12 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.DividerItemDecoration
 import com.michaelfotiadis.heartbeat.R
 import com.michaelfotiadis.heartbeat.ui.base.BaseNavFragment
+import com.michaelfotiadis.heartbeat.ui.main.fragment.bonded.model.UiBondedDevice
 import com.michaelfotiadis.heartbeat.ui.main.fragment.scan.adapter.BluetoothScannedDevicesAdapter
 import com.michaelfotiadis.heartbeat.ui.main.fragment.scan.viewmodel.Action
 import com.michaelfotiadis.heartbeat.ui.main.fragment.scan.viewmodel.ScanDevicesViewModel
@@ -21,9 +22,7 @@ internal class ScanDevicesFragment : BaseNavFragment() {
     @Inject
     lateinit var factory: ScanDevicesViewModelFactory
 
-    private val viewModel: ScanDevicesViewModel by lazy {
-        ViewModelProviders.of(this, factory).get(ScanDevicesViewModel::class.java)
-    }
+    private val viewModel by viewModels<ScanDevicesViewModel>({ this }, { factory })
 
     private lateinit var adapter: BluetoothScannedDevicesAdapter
 
@@ -45,12 +44,20 @@ internal class ScanDevicesFragment : BaseNavFragment() {
 
     private fun bindViews() {
         adapter = BluetoothScannedDevicesAdapter()
-        adapter.listener = viewModel::onDeviceSelected
+        adapter.listener = this::navigateToPair
         scan_devices_recycler_view.adapter = adapter
         scan_devices_recycler_view.addItemDecoration(
             DividerItemDecoration(
                 requireContext(),
                 DividerItemDecoration.VERTICAL
+            )
+        )
+    }
+
+    private fun navigateToPair(uiBondedDevice: UiBondedDevice) {
+        navController.navigate(
+            ScanDevicesFragmentDirections.actionScanFragmentToPairDeviceFragment(
+                uiBondedDevice.address
             )
         )
     }

@@ -30,16 +30,16 @@ class BluetoothServiceDispatcher(context: Context) {
         }
     }
 
-    fun checkBluetoothConnection() {
+    fun refreshBondedDevices() {
         getDefaultIntent().also { intent ->
-            intent.action = BluetoothActions.ACTION_CHECK_CONNECTION
+            intent.action = BluetoothActions.ACTION_REFRESH_BONDED_DEVICES
             applicationContext.startService(intent)
         }
     }
 
-    fun refreshBondedDevices() {
+    fun checkConnection() {
         getDefaultIntent().also { intent ->
-            intent.action = BluetoothActions.ACTION_REFRESH_BONDED_DEVICES
+            intent.action = BluetoothActions.ACTION_CHECK_CONNECTION
             applicationContext.startService(intent)
         }
     }

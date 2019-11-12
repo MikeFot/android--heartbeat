@@ -11,7 +11,7 @@ class MiServices @Inject constructor() {
     class AuthService {
         // Custom service 3 components
         val service = UUID.fromString("0000fee1-0000-1000-8000-00805f9b34fb")
-        val authCharacteristic = UUID.fromString("00000009-0000-3512-2118-0009af100700")
+        val authCharacteristic: UUID = UUID.fromString("00000009-0000-3512-2118-0009af100700")
         val authDescriptor = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb")
         val authorisationBytes = byteArrayOf(
             0x01, 0x8, 0x30, 0x31, 0x32, 0x33, 0x34, 0x35,

@@ -4,13 +4,12 @@ import android.app.Application
 import android.content.Context
 import com.clj.fastble.BleManager
 import com.clj.fastble.scan.BleScanRuleConfig
-import com.michaelfotiadis.heartbeat.bluetooth.BluetoothWrapper
+import com.michaelfotiadis.heartbeat.bluetooth.BluetoothHandler
 import com.michaelfotiadis.heartbeat.bluetooth.constants.MiServices
 import com.michaelfotiadis.heartbeat.bluetooth.factory.BluetoothInteractorFactory
 import com.michaelfotiadis.heartbeat.core.scheduler.ExecutionThreads
 import com.michaelfotiadis.heartbeat.repo.BluetoothRepo
 import com.michaelfotiadis.heartbeat.repo.MessageRepo
-import com.polidea.rxandroidble2.RxBleClient
 import dagger.Module
 import dagger.Provides
 import java.util.concurrent.TimeUnit
@@ -18,11 +17,6 @@ import javax.inject.Singleton
 
 @Module
 internal class BluetoothModule {
-
-    @Provides
-    fun providesRxBleClient(application: Application): RxBleClient {
-        return RxBleClient.create(application)
-    }
 
     @Provides
     @Singleton
@@ -46,14 +40,12 @@ internal class BluetoothModule {
 
     @Provides
     fun provideBluetoothInteractorFactory(
-        rxBleClient: RxBleClient,
         bleManager: BleManager,
         miServices: MiServices,
         messageRepo: MessageRepo,
         executionThreads: ExecutionThreads
     ): BluetoothInteractorFactory {
         return BluetoothInteractorFactory(
-            rxBleClient,
             bleManager,
             miServices,
             messageRepo,
@@ -67,14 +59,12 @@ internal class BluetoothModule {
         context: Context,
         bluetoothRepo: BluetoothRepo,
         messageRepo: MessageRepo,
-        executionThreads: ExecutionThreads,
         bluetoothInteractorFactory: BluetoothInteractorFactory
-    ): BluetoothWrapper {
-        return BluetoothWrapper(
+    ): BluetoothHandler {
+        return BluetoothHandler(
             context,
             bluetoothRepo,
             messageRepo,
-            executionThreads,
             bluetoothInteractorFactory
         )
     }

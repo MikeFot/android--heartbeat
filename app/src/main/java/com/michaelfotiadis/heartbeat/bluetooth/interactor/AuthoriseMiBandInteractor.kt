@@ -16,16 +16,16 @@ class AuthoriseMiBandInteractor(
             miServices.authService.authCharacteristic
         )
         gatt.setCharacteristicNotification(characteristic, true)
-        for (descriptor in characteristic.descriptors) {
-            if (descriptor.uuid == miServices.authService.authDescriptor) {
+        characteristic.descriptors.forEach { descriptor ->
+            if (descriptor.uuid.toString() == miServices.authService.authDescriptor.toString()) {
                 messageRepo.log("Notifying Auth Descriptor")
                 descriptor.value = BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
-                break
+            } else {
+                messageRepo.logError("Descriptor does not match")
             }
         }
         characteristic.value = miServices.authService.authorisationBytes
         messageRepo.log("Writing Auth Characteristic")
         gatt.writeCharacteristic(characteristic)
     }
-
 }

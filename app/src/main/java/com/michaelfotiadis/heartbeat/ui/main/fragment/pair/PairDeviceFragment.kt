@@ -4,8 +4,8 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProviders
 import androidx.navigation.fragment.navArgs
 import com.michaelfotiadis.heartbeat.R
 import com.michaelfotiadis.heartbeat.core.logger.AppLogger
@@ -22,13 +22,11 @@ internal class PairDeviceFragment : BaseNavFragment() {
     @Inject
     lateinit var appLogger: AppLogger
 
-    val args: PairDeviceFragmentArgs by navArgs()
+    private val args: PairDeviceFragmentArgs by navArgs()
 
     private lateinit var binder: ViewBinder
 
-    private val viewModel: PairDeviceViewModel by lazy {
-        ViewModelProviders.of(this, factory).get(PairDeviceViewModel::class.java)
-    }
+    private val viewModel by viewModels<PairDeviceViewModel>({ this }, { factory })
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -74,6 +72,7 @@ internal class PairDeviceFragment : BaseNavFragment() {
             Action.CONNECTING -> binder.showConnecting()
             Action.CONNECTED -> binder.showConnected()
             Action.DISCONNECTED -> binder.showDisconnected()
+            Action.CONNECTION_FAILED -> binder.showDisconnected()
             Action.SERVICES_DISCOVERED -> binder.showServicesDiscovered()
             Action.AUTH_NOTIFIED -> binder.showAuthorising()
             Action.AUTH_STEP_ONE -> binder.showAuthorisedOne()

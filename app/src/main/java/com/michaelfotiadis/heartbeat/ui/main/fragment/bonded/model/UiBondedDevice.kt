@@ -10,5 +10,6 @@ data class UiBondedDevice(
     val name: String,
     val address: String,
     val bondedStatus: BondState,
-    val deviceType: DeviceType
+    val deviceType: DeviceType,
+    val rssi: Int = 0
 ) : Parcelable

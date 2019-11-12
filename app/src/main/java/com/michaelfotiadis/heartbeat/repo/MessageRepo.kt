@@ -19,13 +19,14 @@ class MessageRepo(private val executionThreads: ExecutionThreads) {
 
 
     private var lastMessageTimestamp = 0L
-    private val messageDelayMs = TimeUnit.MILLISECONDS.toMillis(100L)
+    private val messageDelayMs = TimeUnit.MILLISECONDS.toMillis(200L)
 
     fun log(message: String) {
         executionThreads.messageScope.launch {
             if (System.currentTimeMillis() - lastMessageTimestamp < messageDelayMs) {
                 delay(messageDelayMs)
             }
+            lastMessageTimestamp = System.currentTimeMillis()
             _messageLiveData.postValue(message)
         }
     }
@@ -35,6 +36,7 @@ class MessageRepo(private val executionThreads: ExecutionThreads) {
             if (System.currentTimeMillis() - lastMessageTimestamp < messageDelayMs) {
                 delay(messageDelayMs)
             }
+            lastMessageTimestamp = System.currentTimeMillis()
             _errorLiveData.postValue(message)
         }
     }

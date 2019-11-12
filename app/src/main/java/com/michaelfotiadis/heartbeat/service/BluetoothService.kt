@@ -8,11 +8,10 @@ import android.os.IBinder
 import androidx.lifecycle.LifecycleService
 import androidx.lifecycle.Observer
 import com.michaelfotiadis.heartbeat.R
-import com.michaelfotiadis.heartbeat.bluetooth.BluetoothWrapper
+import com.michaelfotiadis.heartbeat.bluetooth.BluetoothHandler
 import com.michaelfotiadis.heartbeat.bluetooth.model.HeartRateStatus
 import com.michaelfotiadis.heartbeat.repo.BluetoothRepo
 import com.michaelfotiadis.heartbeat.repo.MessageRepo
-import com.polidea.rxandroidble2.RxBleClient
 import dagger.android.AndroidInjection
 import es.dmoral.toasty.Toasty
 import kotlinx.coroutines.CancellationException
@@ -35,7 +34,7 @@ class BluetoothService : LifecycleService() {
     @Inject
     lateinit var notificationManager: NotificationManager
     @Inject
-    lateinit var bluetoothWrapper: BluetoothWrapper
+    lateinit var bluetoothWrapper: BluetoothHandler
     @Inject
     lateinit var messageRepo: MessageRepo
 
@@ -52,20 +51,24 @@ class BluetoothService : LifecycleService() {
             notificationFactory.getServiceStartedNotification(applicationContext)
         )
 
-        bluetoothWrapper.observeBluetoothState()
-
         repo.actionLiveData.observe(this, Observer(this@BluetoothService::processRepoAction))
 
-        repo.bluetoothStateLiveData.observe(this, Observer { state ->
-            when (state) {
-                RxBleClient.State.BLUETOOTH_NOT_AVAILABLE -> updateNotification(
-                    notificationFactory.getEnableBluetoothNotification(applicationContext)
-                )
-                else -> {
-                    // NOOP
-                }
-            }
-        })
+        repo.bluetoothConnectionLiveData.observe(
+            this,
+            Observer(this@BluetoothService::onBluetoothStateUpdated)
+        )
+    }
+
+    private fun onBluetoothStateUpdated(isEnabled: Boolean) {
+        if (isEnabled) {
+            updateNotification(
+                notificationFactory.getServiceStartedNotification(applicationContext)
+            )
+        } else {
+            updateNotification(
+                notificationFactory.getEnableBluetoothNotification(applicationContext)
+            )
+        }
     }
 
     private fun updateHeartRateNotification(heartRateStatus: HeartRateStatus?) {
@@ -111,11 +114,9 @@ class BluetoothService : LifecycleService() {
     }
 
     override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
-        messageRepo.log("ACTION ${intent.action}")
         when (intent.action) {
             BluetoothActions.ACTION_START -> handleActionStart()
             BluetoothActions.ACTION_STOP -> handleActionStop()
-            BluetoothActions.ACTION_CHECK_CONNECTION -> checkConnection()
             BluetoothActions.ACTION_REFRESH_BONDED_DEVICES -> refreshBondedDevices()
             BluetoothActions.ACTION_ENABLE_BLUETOOTH -> enableBluetooth()
             BluetoothActions.ACTION_CONNECT_TO_MAC -> connectToMac(
@@ -125,6 +126,7 @@ class BluetoothService : LifecycleService() {
             )
             BluetoothActions.ACTION_SCAN_DEVICES -> scanForDevices()
             BluetoothActions.ACTION_DISCONNECT_DEVICE -> disconnectDevice()
+            BluetoothActions.ACTION_CHECK_CONNECTION -> checkConnection()
         }
         return super.onStartCommand(intent, flags, startId)
     }
@@ -173,6 +175,7 @@ class BluetoothService : LifecycleService() {
                 )
                 bluetoothWrapper.stopPingHeartRate()
             }
+            BluetoothRepo.Action.ConnectionFailed -> messageRepo.logError("Connection Failed")
             BluetoothRepo.Action.ServicesDiscovered -> bluetoothWrapper.notifyAuthorisation()
             BluetoothRepo.Action.AuthorisationNotified -> bluetoothWrapper.executeAuthorisationSequence()
             BluetoothRepo.Action.AuthorisationComplete -> {
@@ -199,7 +202,7 @@ class BluetoothService : LifecycleService() {
 
     private fun checkConnection() {
         scope.launch {
-            bluetoothWrapper.observeBluetoothState()
+            bluetoothWrapper.checkConnection()
         }
     }
 
@@ -211,20 +214,7 @@ class BluetoothService : LifecycleService() {
 
     private fun refreshBondedDevices() {
         scope.launch {
-            val bondedDevices = bluetoothWrapper.getBondedDevices()
-            repo.bondedDevicesLiveData.postValue(bondedDevices)
-        }
-    }
-
-    private fun requestAuthorisation() {
-        scope.launch {
-            bluetoothWrapper.authorise()
-        }
-    }
-
-    private fun checkDeviceHeartService() {
-        scope.launch {
-            bluetoothWrapper.askForSingleHeartRate()
+            bluetoothWrapper.getBondedDevices()
         }
     }
 
