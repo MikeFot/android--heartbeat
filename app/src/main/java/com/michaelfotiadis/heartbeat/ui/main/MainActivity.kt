@@ -47,7 +47,8 @@ class MainActivity : DaggerAppCompatActivity(), ServiceConnection {
 
         appBarConfiguration = AppBarConfiguration.Builder(
             R.id.bluetoothActivationFragment,
-            R.id.bondedDevicesFragment
+            R.id.bondedDevicesFragment,
+            R.id.dashboardFragment
         ).build()
 
         main_toolbar.also { toolbar ->

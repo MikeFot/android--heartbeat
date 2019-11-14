@@ -5,34 +5,44 @@ import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCallback
 import android.bluetooth.BluetoothGattCharacteristic
-import android.bluetooth.BluetoothGattDescriptor
+import android.bluetooth.BluetoothGattServerCallback
 import android.bluetooth.BluetoothManager
 import android.content.Context
 import android.content.Intent
 import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
+import com.michaelfotiadis.heartbeat.bluetooth.constants.MiServices
 import com.michaelfotiadis.heartbeat.bluetooth.constants.UUIDs
 import com.michaelfotiadis.heartbeat.bluetooth.factory.BluetoothInteractorFactory
 import com.michaelfotiadis.heartbeat.bluetooth.interactor.Cancellable
-import com.michaelfotiadis.heartbeat.bluetooth.interactor.ExecuteAuthorisationSequenceInteractor
+import com.michaelfotiadis.heartbeat.bluetooth.interactor.ExecuteAuthSequenceInteractor
 import com.michaelfotiadis.heartbeat.bluetooth.model.ScanStatus
 import com.michaelfotiadis.heartbeat.repo.BluetoothRepo
 import com.michaelfotiadis.heartbeat.repo.MessageRepo
+import java.util.*
 
 class BluetoothHandler(
     private val context: Context,
     private val bluetoothRepo: BluetoothRepo,
     private val messageRepo: MessageRepo,
+    private val miServices: MiServices,
     private val factory: BluetoothInteractorFactory
 ) {
 
     private val bluetoothManager =
         context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
+
     private var bluetoothGatt: BluetoothGatt? = null
 
     private val operations = mutableListOf<Cancellable>()
 
     private var heartRateOperation: Cancellable? = null
     private var scanCancellable: Cancellable? = null
+
+    private val bleServer =
+        bluetoothManager.openGattServer(
+            context.applicationContext,
+            object : BluetoothGattServerCallback() {
+            })
 
     private val callback = GattCallback()
 
@@ -48,6 +58,10 @@ class BluetoothHandler(
                         gatt.device.name
                     )
                 )
+                getConnectedDevice()?.let { device ->
+                    val isConnected = bleServer.connect(device, true)
+                    messageRepo.log("Gatt Server $isConnected")
+                }
             }
             BluetoothGatt.STATE_DISCONNECTED -> {
                 messageRepo.log("Disconnected")
@@ -57,10 +71,14 @@ class BluetoothHandler(
                         gatt.device.name
                     )
                 )
+                getConnectedDevice()?.let(bleServer::cancelConnection)
             }
         }
     }
 
+    private fun getConnectedDevice(): BluetoothDevice? {
+        return bluetoothManager.adapter.getRemoteDevice(bluetoothRepo.connectedMacAddress)
+    }
 
     fun discoverServices() {
         bluetoothGatt?.discoverServices()
@@ -69,7 +87,7 @@ class BluetoothHandler(
     fun notifyAuthorisation() {
         val gatt = bluetoothGatt
         if (gatt != null) {
-            factory.authoriseMiBandInteractor.execute(gatt)
+            factory.readAuthInteractor.execute(gatt)
         } else {
             messageRepo.logError("GATT IS NULL!")
             bluetoothRepo.postAction(BluetoothRepo.Action.Disconnected(""))
@@ -79,12 +97,13 @@ class BluetoothHandler(
     fun executeAuthorisationSequence() {
         val gatt = bluetoothGatt
         if (gatt != null) {
-            factory.executeAuthorisationSequenceInteractor.execute(gatt).also { result ->
+            messageRepo.log("Executing authorisation")
+            factory.executeAuthSequenceInteractor.execute(gatt).also { result ->
                 val action = when (result) {
-                    ExecuteAuthorisationSequenceInteractor.Result.STEP_1 -> BluetoothRepo.Action.AuthorisationStepOne
-                    ExecuteAuthorisationSequenceInteractor.Result.STEP_2 -> BluetoothRepo.Action.AuthorisationStepTwo
-                    ExecuteAuthorisationSequenceInteractor.Result.DONE -> BluetoothRepo.Action.AuthorisationComplete
-                    ExecuteAuthorisationSequenceInteractor.Result.ERROR -> BluetoothRepo.Action.AuthorisationFailed
+                    ExecuteAuthSequenceInteractor.Result.STEP_1 -> BluetoothRepo.Action.AuthorisationStepOne
+                    ExecuteAuthSequenceInteractor.Result.STEP_2 -> BluetoothRepo.Action.AuthorisationStepTwo
+                    ExecuteAuthSequenceInteractor.Result.DONE -> BluetoothRepo.Action.AuthorisationComplete
+                    ExecuteAuthSequenceInteractor.Result.ERROR -> BluetoothRepo.Action.AuthorisationFailed
                 }
                 bluetoothRepo.postAction(action)
             }
@@ -114,6 +133,7 @@ class BluetoothHandler(
 
     fun connectToMacInitial(macAddress: String) {
         stopOperations()
+        disconnect()
         messageRepo.log("Attempting connection to mac $macAddress")
         bluetoothRepo.postAction(BluetoothRepo.Action.Idle)
         try {
@@ -121,6 +141,8 @@ class BluetoothHandler(
             if (device.bondState == BluetoothDevice.BOND_NONE) {
                 device.createBond()
                 messageRepo.log("Created bond with device")
+            } else {
+                messageRepo.log("Device already bonded")
             }
             bluetoothRepo.connectedMacAddress = macAddress
             bluetoothGatt = device.connectGatt(context, true, callback)
@@ -142,6 +164,16 @@ class BluetoothHandler(
         register(
             factory.cancelScanInteractor.execute()
         )
+    }
+
+    suspend fun refreshDeviceInfo() {
+        val gatt = bluetoothGatt
+        if (gatt != null) {
+            messageRepo.log("Refreshing device info")
+            factory.refreshDeviceInfoInteractor.execute(gatt)
+        } else {
+            throw IllegalStateException("Null gatt!")
+        }
     }
 
     fun startPingHeartRate() {
@@ -170,11 +202,13 @@ class BluetoothHandler(
         messageRepo.log("Stopping Operations")
         operations.forEach { cancellable -> cancellable.cancel() }
         operations.clear()
+        factory.cleanupBluetoothOnInteractor.execute()
     }
 
     fun cleanup() {
         messageRepo.log("Cleanup")
-        factory.cleanupBluetoothOnInteractor.execute()
+        bluetoothGatt?.close()
+        bleServer.close()
         stopOperations()
     }
 
@@ -185,16 +219,18 @@ class BluetoothHandler(
     inner class GattCallback : BluetoothGattCallback() {
 
         override fun onCharacteristicChanged(
-            gatt: BluetoothGatt?,
-            characteristic: BluetoothGattCharacteristic?
+            gatt: BluetoothGatt,
+            characteristic: BluetoothGattCharacteristic
         ) {
-            messageRepo.log("Characteristic changed ${characteristic?.uuid}")
-            when (characteristic?.uuid.toString()) {
+            super.onCharacteristicChanged(gatt, characteristic)
+            messageRepo.log("Characteristic changed ${characteristic.uuid}")
+            when (characteristic.uuid.toString()) {
                 UUIDs.CUSTOM_SERVICE_AUTH_CHARACTERISTIC_STRING -> {
-                    messageRepo.log("AUTH characteristic changed '${characteristic?.value}'")
+                    messageRepo.log("AUTH characteristic changed '${characteristic.value}'")
                     bluetoothRepo.postAction(BluetoothRepo.Action.AuthorisationNotified)
                 }
             }
+            factory.updateCharacteristicInteractor.execute(characteristic)
         }
 
         override fun onCharacteristicRead(
@@ -203,7 +239,22 @@ class BluetoothHandler(
             status: Int
         ) {
             super.onCharacteristicRead(gatt, characteristic, status)
-            messageRepo.log("onCharacteristicRead ${characteristic.uuid}")
+            messageRepo.log(
+                "onCharacteristicRead ${characteristic.uuid} - ${Arrays.toString(
+                    characteristic.value
+                )}"
+            )
+
+            if (characteristic.uuid == miServices.authService.authCharacteristic) {
+                val isAuthorised = miServices.isAuthorised(characteristic.value)
+                messageRepo.log("Is authorised: $isAuthorised")
+                if (isAuthorised) {
+                    executeAuthorisationSequence()
+                } else {
+                    factory.notifyAuthInteractor.execute(gatt)
+                }
+            }
+            factory.updateCharacteristicInteractor.execute(characteristic)
         }
 
         override fun onCharacteristicWrite(
@@ -213,12 +264,6 @@ class BluetoothHandler(
         ) {
             super.onCharacteristicWrite(gatt, characteristic, status)
             messageRepo.log("onCharacteristicWrite ${characteristic.uuid}")
-            when (characteristic.uuid.toString()) {
-                UUIDs.CUSTOM_SERVICE_AUTH_CHARACTERISTIC_STRING -> {
-                    messageRepo.log("AUTH characteristic changed '${characteristic.value}'")
-                    bluetoothRepo.postAction(BluetoothRepo.Action.AuthorisationNotified)
-                }
-            }
         }
 
         override fun onConnectionStateChange(gatt: BluetoothGatt, status: Int, newState: Int) {
@@ -226,48 +271,10 @@ class BluetoothHandler(
             updateConnectionState(newState, gatt)
         }
 
-        override fun onDescriptorRead(
-            gatt: BluetoothGatt,
-            descriptor: BluetoothGattDescriptor,
-            status: Int
-        ) {
-            super.onDescriptorRead(gatt, descriptor, status)
-            messageRepo.log("onDescriptorRead ${descriptor.uuid}")
-        }
-
-        override fun onDescriptorWrite(
-            gatt: BluetoothGatt,
-            descriptor: BluetoothGattDescriptor,
-            status: Int
-        ) {
-            super.onDescriptorWrite(gatt, descriptor, status)
-            messageRepo.log("onDescriptorWrite ${descriptor.uuid}")
-        }
-
-        override fun onMtuChanged(gatt: BluetoothGatt, mtu: Int, status: Int) {
-            super.onMtuChanged(gatt, mtu, status)
-            messageRepo.log("onMtuChanged $mtu")
-        }
-
-        override fun onPhyRead(gatt: BluetoothGatt, txPhy: Int, rxPhy: Int, status: Int) {
-            super.onPhyRead(gatt, txPhy, rxPhy, status)
-            messageRepo.log("onPhyRead $rxPhy")
-        }
-
-        override fun onPhyUpdate(gatt: BluetoothGatt, txPhy: Int, rxPhy: Int, status: Int) {
-            super.onPhyUpdate(gatt, txPhy, rxPhy, status)
-            messageRepo.log("onPhyUpdate $rxPhy")
-        }
-
-        override fun onReadRemoteRssi(gatt: BluetoothGatt, rssi: Int, status: Int) {
-            super.onReadRemoteRssi(gatt, rssi, status)
-            messageRepo.log("RSSI $rssi")
-        }
-
         override fun onServicesDiscovered(gatt: BluetoothGatt, status: Int) {
             super.onServicesDiscovered(gatt, status)
+            messageRepo.log("On Services Discovered")
             bluetoothRepo.postAction(BluetoothRepo.Action.ServicesDiscovered)
         }
     }
-
 }

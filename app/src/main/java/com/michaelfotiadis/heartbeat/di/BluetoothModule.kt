@@ -32,7 +32,7 @@ internal class BluetoothModule {
             enableLog(true)
             initScanRule(
                 BleScanRuleConfig.Builder()
-                    .setScanTimeOut(TimeUnit.SECONDS.toMillis(10))
+                    .setScanTimeOut(TimeUnit.SECONDS.toMillis(20))
                     .build()
             )
         }
@@ -41,12 +41,14 @@ internal class BluetoothModule {
     @Provides
     fun provideBluetoothInteractorFactory(
         bleManager: BleManager,
+        bluetoothRepo: BluetoothRepo,
         miServices: MiServices,
         messageRepo: MessageRepo,
         executionThreads: ExecutionThreads
     ): BluetoothInteractorFactory {
         return BluetoothInteractorFactory(
             bleManager,
+            bluetoothRepo,
             miServices,
             messageRepo,
             executionThreads
@@ -59,12 +61,14 @@ internal class BluetoothModule {
         context: Context,
         bluetoothRepo: BluetoothRepo,
         messageRepo: MessageRepo,
+        miServices: MiServices,
         bluetoothInteractorFactory: BluetoothInteractorFactory
     ): BluetoothHandler {
         return BluetoothHandler(
             context,
             bluetoothRepo,
             messageRepo,
+            miServices,
             bluetoothInteractorFactory
         )
     }

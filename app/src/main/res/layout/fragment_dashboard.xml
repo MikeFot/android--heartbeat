@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/dashboard_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="@dimen/padding_16dp">
+
+    <include layout="@layout/includable_card_heart_single" />
+
+    <include layout="@layout/includable_card_heart_continuous" />
+
+    <include layout="@layout/includable_card_profile" />
+
+    <include layout="@layout/includable_card_device_info" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

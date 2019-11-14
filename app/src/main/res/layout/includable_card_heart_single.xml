@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/dashboard_card_heart_single"
+    style="@style/CardView.Light"
+    android:layout_width="0dp"
+    android:layout_height="0dp"
+    android:layout_margin="@dimen/margin_16dp"
+    android:clickable="true"
+    android:focusable="true"
+    android:foreground="?android:attr/selectableItemBackground"
+    app:cardCornerRadius="@dimen/dashboard_card_corner"
+    app:contentPadding="@dimen/padding_8dp"
+    app:layout_constraintBottom_toTopOf="@id/dashboard_card_profile"
+    app:layout_constraintDimensionRatio="H, 1:1"
+    app:layout_constraintEnd_toStartOf="@id/dashboard_card_heart_continuous"
+    app:layout_constraintHorizontal_chainStyle="packed"
+    app:layout_constraintStart_toStartOf="parent"
+    app:layout_constraintTop_toTopOf="parent"
+    app:layout_constraintVertical_chainStyle="packed"
+    tools:showIn="@layout/fragment_dashboard">
+
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:gravity="center"
+        android:orientation="vertical">
+
+        <ImageView
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:tint="@color/heart_red"
+            app:srcCompat="@drawable/ic_heart_one" />
+
+        <TextView
+            style="@style/AppTextView.Header"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="Single Measurement" />
+
+    </LinearLayout>
+
+</androidx.cardview.widget.CardView>

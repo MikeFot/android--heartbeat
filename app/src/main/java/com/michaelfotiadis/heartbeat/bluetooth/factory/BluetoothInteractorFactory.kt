@@ -2,29 +2,38 @@ package com.michaelfotiadis.heartbeat.bluetooth.factory
 
 import com.clj.fastble.BleManager
 import com.michaelfotiadis.heartbeat.bluetooth.constants.MiServices
-import com.michaelfotiadis.heartbeat.bluetooth.interactor.AuthoriseMiBandInteractor
 import com.michaelfotiadis.heartbeat.bluetooth.interactor.CancelScanInteractor
 import com.michaelfotiadis.heartbeat.bluetooth.interactor.CleanupBluetoothInteractor
-import com.michaelfotiadis.heartbeat.bluetooth.interactor.ExecuteAuthorisationSequenceInteractor
+import com.michaelfotiadis.heartbeat.bluetooth.interactor.ExecuteAuthSequenceInteractor
 import com.michaelfotiadis.heartbeat.bluetooth.interactor.GetBondedDevicesInteractor
+import com.michaelfotiadis.heartbeat.bluetooth.interactor.NotifyAuthInteractor
 import com.michaelfotiadis.heartbeat.bluetooth.interactor.PingHeartRateInteractor
+import com.michaelfotiadis.heartbeat.bluetooth.interactor.ReadAuthInteractor
+import com.michaelfotiadis.heartbeat.bluetooth.interactor.RefreshDeviceInfoInteractor
 import com.michaelfotiadis.heartbeat.bluetooth.interactor.ScanForDevicesInteractor
+import com.michaelfotiadis.heartbeat.bluetooth.interactor.UpdateCharacteristicInteractor
 import com.michaelfotiadis.heartbeat.core.scheduler.ExecutionThreads
+import com.michaelfotiadis.heartbeat.repo.BluetoothRepo
 import com.michaelfotiadis.heartbeat.repo.MessageRepo
 
 class BluetoothInteractorFactory(
     private val bleManager: BleManager,
+    private val bluetoothRepo: BluetoothRepo,
     private val miServices: MiServices,
     private val messageRepo: MessageRepo,
     private val executionThreads: ExecutionThreads
 ) {
 
-    val authoriseMiBandInteractor: AuthoriseMiBandInteractor by lazy {
-        AuthoriseMiBandInteractor(miServices, messageRepo)
+    val readAuthInteractor: ReadAuthInteractor by lazy {
+        ReadAuthInteractor(miServices)
     }
 
-    val executeAuthorisationSequenceInteractor: ExecuteAuthorisationSequenceInteractor by lazy {
-        ExecuteAuthorisationSequenceInteractor(miServices, messageRepo)
+    val notifyAuthInteractor: NotifyAuthInteractor by lazy {
+        NotifyAuthInteractor(miServices, messageRepo)
+    }
+
+    val executeAuthSequenceInteractor: ExecuteAuthSequenceInteractor by lazy {
+        ExecuteAuthSequenceInteractor(miServices, messageRepo)
     }
 
     val getBondedDevicesInteractor: GetBondedDevicesInteractor by lazy {
@@ -37,6 +46,14 @@ class BluetoothInteractorFactory(
             messageRepo,
             executionThreads
         )
+    }
+
+    val refreshDeviceInfoInteractor: RefreshDeviceInfoInteractor by lazy {
+        RefreshDeviceInfoInteractor(miServices, messageRepo)
+    }
+
+    val updateCharacteristicInteractor: UpdateCharacteristicInteractor by lazy {
+        UpdateCharacteristicInteractor(miServices, bluetoothRepo, messageRepo)
     }
 
     val cleanupBluetoothOnInteractor: CleanupBluetoothInteractor by lazy {

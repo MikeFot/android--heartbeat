@@ -5,7 +5,7 @@ import android.bluetooth.BluetoothGattDescriptor
 import com.michaelfotiadis.heartbeat.bluetooth.constants.MiServices
 import com.michaelfotiadis.heartbeat.repo.MessageRepo
 
-class AuthoriseMiBandInteractor(
+class NotifyAuthInteractor(
     private val miServices: MiServices,
     private val messageRepo: MessageRepo
 ) {
@@ -17,8 +17,8 @@ class AuthoriseMiBandInteractor(
         )
         gatt.setCharacteristicNotification(characteristic, true)
         characteristic.descriptors.forEach { descriptor ->
-            if (descriptor.uuid.toString() == miServices.authService.authDescriptor.toString()) {
-                messageRepo.log("Notifying Auth Descriptor")
+            if (descriptor.uuid == miServices.authService.authDescriptor) {
+                messageRepo.log("Notifying Auth Descriptor ${descriptor.value}")
                 descriptor.value = BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
             } else {
                 messageRepo.logError("Descriptor does not match")
@@ -28,4 +28,5 @@ class AuthoriseMiBandInteractor(
         messageRepo.log("Writing Auth Characteristic")
         gatt.writeCharacteristic(characteristic)
     }
+
 }

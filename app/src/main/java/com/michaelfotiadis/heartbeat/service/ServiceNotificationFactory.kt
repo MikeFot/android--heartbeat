@@ -8,42 +8,43 @@ import android.content.Intent
 import androidx.core.app.NotificationCompat
 import com.michaelfotiadis.heartbeat.R
 import com.michaelfotiadis.heartbeat.ui.main.MainActivity
-import javax.inject.Inject
 
-class ServiceNotificationFactory @Inject constructor() {
+class ServiceNotificationFactory constructor(
+    private val context: Context
+) {
 
-    fun getServiceStartedNotification(context: Context): Notification {
-        return getDefaultBuilder(context)
+    fun getServiceStartedNotification(): Notification {
+        return getDefaultBuilder()
             .setContentText(context.getString(R.string.service_started))
             .build()
     }
 
-    fun getEnableBluetoothNotification(context: Context): Notification {
-        return getDefaultBuilder(context)
+    fun getEnableBluetoothNotification(): Notification {
+        return getDefaultBuilder()
             .setContentText(context.getString(R.string.service_bluetooth_off))
             .setContentIntent(getBluetoothPendingIntent(context))
             .build()
     }
 
-    fun getConnectedToDevice(context: Context, deviceName: String): Notification {
-        return getDefaultBuilder(context)
+    fun getConnectedToDevice(deviceName: String): Notification {
+        return getDefaultBuilder()
             .setContentText(context.getString(R.string.service_connection_success, deviceName))
             .build()
     }
 
-    fun getDisconnectedFromDevice(context: Context, deviceName: String): Notification {
-        return getDefaultBuilder(context)
+    fun getDisconnectedFromDevice(deviceName: String): Notification {
+        return getDefaultBuilder()
             .setContentText(context.getString(R.string.service_connection_stop, deviceName))
             .build()
     }
 
-    fun getHeartRateNotification(context: Context, heartRate: Int): Notification {
-        return getDefaultBuilder(context)
+    fun getHeartRateNotification(heartRate: Int): Notification {
+        return getDefaultBuilder()
             .setContentText(context.getString(R.string.service_heart_rate, heartRate))
             .build()
     }
 
-    private fun getDefaultBuilder(context: Context): NotificationCompat.Builder {
+    private fun getDefaultBuilder(): NotificationCompat.Builder {
         return NotificationCompat.Builder(
             context,
             context.getString(R.string.bluetooth_channel_id)

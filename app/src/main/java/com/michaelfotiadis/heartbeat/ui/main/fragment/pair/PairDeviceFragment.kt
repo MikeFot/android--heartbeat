@@ -77,8 +77,15 @@ internal class PairDeviceFragment : BaseNavFragment() {
             Action.AUTH_NOTIFIED -> binder.showAuthorising()
             Action.AUTH_STEP_ONE -> binder.showAuthorisedOne()
             Action.AUTH_STEP_TWO -> binder.showAuthorisedTwo()
-            Action.AUTH_DONE -> binder.showAuthorisedDone()
+            Action.AUTH_DONE -> {
+                binder.showAuthorisedDone()
+                moveToConnected()
+            }
             Action.AUTH_FAILED -> binder.showAuthorisedFailed()
         }
+    }
+
+    private fun moveToConnected() {
+        navController.navigate(PairDeviceFragmentDirections.actionPairDeviceFragmentToDashboardFragment())
     }
 }

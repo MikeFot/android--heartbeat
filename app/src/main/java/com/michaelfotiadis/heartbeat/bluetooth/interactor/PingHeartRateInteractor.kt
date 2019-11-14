@@ -14,7 +14,7 @@ class PingHeartRateInteractor(
 ) {
 
     fun execute(bluetoothGatt: BluetoothGatt): Cancellable {
-        val disposable = Observable.interval(10, 10, TimeUnit.SECONDS)
+        val disposable = Observable.interval(10, 8, TimeUnit.SECONDS)
             .flatMap { count ->
                 return@flatMap Observable.fromPublisher<Boolean> { publisher ->
                     val service = bluetoothGatt.getService(miServices.heartRateService.service)

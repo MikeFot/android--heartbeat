@@ -57,16 +57,42 @@
             app:destination="@id/bondedDevicesFragment"
             app:popUpTo="@id/pairDeviceFragment"
             app:popUpToInclusive="true" />
+        <action
+            android:id="@+id/action_pairDeviceFragment_to_dashboardFragment"
+            app:destination="@id/dashboardFragment"
+            app:enterAnim="@anim/slide_in_bottom"
+            app:launchSingleTop="true"
+            app:popExitAnim="@anim/slide_out_bottom"
+            app:popUpTo="@id/nav_main"
+            app:popUpToInclusive="true" />
     </fragment>
 
     <fragment
         android:id="@+id/scanFragment"
         android:name="com.michaelfotiadis.heartbeat.ui.main.fragment.scan.ScanDevicesFragment"
         android:label="Scan for Devices"
-        tools:layout="@layout/fragment_scan_devices" >
+        tools:layout="@layout/fragment_scan_devices">
         <action
             android:id="@+id/action_scanFragment_to_pairDeviceFragment"
             app:destination="@id/pairDeviceFragment" />
     </fragment>
+
+    <fragment
+        android:id="@+id/dashboardFragment"
+        android:name="com.michaelfotiadis.heartbeat.ui.main.fragment.connected.DashboardFragment"
+        android:label="Connected"
+        tools:layout="@layout/fragment_dashboard">
+        <action
+            android:id="@+id/action_connectedFragment_to_deviceInfoFragment"
+            app:destination="@id/deviceInfoFragment"
+            app:enterAnim="@anim/enter_from_right"
+            app:popExitAnim="@anim/exit_to_right" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/deviceInfoFragment"
+        android:name="com.michaelfotiadis.heartbeat.ui.main.fragment.info.DeviceInfoFragment"
+        android:label="Device Information"
+        tools:layout="@layout/fragment_device_info" />
 
 </navigation>

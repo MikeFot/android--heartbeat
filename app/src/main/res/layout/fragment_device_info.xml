@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/device_info_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/icons"
+    android:orientation="vertical"
+    tools:context=".ui.main.fragment.info.DeviceInfoFragment">
+
+
+    <LinearLayout
+        android:id="@+id/info_name_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/info_name_header"
+            style="@style/AppTextView.Header"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Device Name" />
+
+        <TextView
+            android:id="@+id/info_name_body"
+            style="@style/AppTextView.Body"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@color/secondary_text"
+            tools:text="Mitsos" />
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="2dp"
+        android:background="@color/divider" />
+
+    <LinearLayout
+        android:id="@+id/info_battery_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/info_battery_header"
+            style="@style/AppTextView.Header"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Battery Level" />
+
+
+        <com.michaelfotiadis.heartbeat.ui.view.DotsTextView
+            android:id="@+id/info_battery_body"
+            style="@style/AppTextView.Body"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@color/secondary_text"
+            tools:text="64%" />
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="2dp"
+        android:background="@color/divider" />
+
+</LinearLayout>

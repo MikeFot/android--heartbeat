@@ -13,11 +13,11 @@ import com.michaelfotiadis.heartbeat.bluetooth.model.HeartRateStatus
 import com.michaelfotiadis.heartbeat.repo.BluetoothRepo
 import com.michaelfotiadis.heartbeat.repo.MessageRepo
 import dagger.android.AndroidInjection
-import es.dmoral.toasty.Toasty
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -34,7 +34,7 @@ class BluetoothService : LifecycleService() {
     @Inject
     lateinit var notificationManager: NotificationManager
     @Inject
-    lateinit var bluetoothWrapper: BluetoothHandler
+    lateinit var bluetoothHandler: BluetoothHandler
     @Inject
     lateinit var messageRepo: MessageRepo
 
@@ -48,7 +48,7 @@ class BluetoothService : LifecycleService() {
         super.onCreate()
 
         updateNotification(
-            notificationFactory.getServiceStartedNotification(applicationContext)
+            notificationFactory.getServiceStartedNotification()
         )
 
         repo.actionLiveData.observe(this, Observer(this@BluetoothService::processRepoAction))
@@ -57,16 +57,20 @@ class BluetoothService : LifecycleService() {
             this,
             Observer(this@BluetoothService::onBluetoothStateUpdated)
         )
+
+        repo.deviceInfoLiveData.observe(this, Observer { deviceInfo ->
+            messageRepo.log("Device Info $deviceInfo")
+        })
     }
 
     private fun onBluetoothStateUpdated(isEnabled: Boolean) {
         if (isEnabled) {
             updateNotification(
-                notificationFactory.getServiceStartedNotification(applicationContext)
+                notificationFactory.getServiceStartedNotification()
             )
         } else {
             updateNotification(
-                notificationFactory.getEnableBluetoothNotification(applicationContext)
+                notificationFactory.getEnableBluetoothNotification()
             )
         }
     }
@@ -75,7 +79,6 @@ class BluetoothService : LifecycleService() {
         if (heartRateStatus is HeartRateStatus.Updated) {
             updateNotification(
                 notificationFactory.getHeartRateNotification(
-                    this,
                     heartRateStatus.heartRate
                 )
             )
@@ -84,7 +87,7 @@ class BluetoothService : LifecycleService() {
 
     override fun onDestroy() {
         disconnectDevice()
-        bluetoothWrapper.cleanup()
+        bluetoothHandler.cleanup()
         try {
             scope.cancel()
         } catch (exception: CancellationException) {
@@ -94,9 +97,9 @@ class BluetoothService : LifecycleService() {
     }
 
     private fun disconnectDevice() {
-        bluetoothWrapper.cancelScan()
-        bluetoothWrapper.stopPingHeartRate()
-        bluetoothWrapper.disconnect()
+        bluetoothHandler.cancelScan()
+        bluetoothHandler.stopPingHeartRate()
+        bluetoothHandler.disconnect()
     }
 
     override fun onBind(intent: Intent): IBinder {
@@ -146,7 +149,7 @@ class BluetoothService : LifecycleService() {
         if (!isStarted) {
             startForeground(
                 NOTIFICATION_ID,
-                notificationFactory.getServiceStartedNotification(this)
+                notificationFactory.getServiceStartedNotification()
             )
             isStarted = true
         }
@@ -159,68 +162,68 @@ class BluetoothService : LifecycleService() {
             }
             is BluetoothRepo.Action.Connected -> {
                 updateNotification(
-                    notificationFactory.getConnectedToDevice(
-                        applicationContext,
-                        action.name
-                    )
+                    notificationFactory.getConnectedToDevice(action.name)
                 )
-                bluetoothWrapper.discoverServices()
+                bluetoothHandler.discoverServices()
             }
             is BluetoothRepo.Action.Disconnected -> {
                 updateNotification(
-                    notificationFactory.getDisconnectedFromDevice(
-                        applicationContext,
-                        action.name
-                    )
+                    notificationFactory.getDisconnectedFromDevice(action.name)
                 )
-                bluetoothWrapper.stopPingHeartRate()
+                bluetoothHandler.stopPingHeartRate()
             }
             BluetoothRepo.Action.ConnectionFailed -> messageRepo.logError("Connection Failed")
-            BluetoothRepo.Action.ServicesDiscovered -> bluetoothWrapper.notifyAuthorisation()
-            BluetoothRepo.Action.AuthorisationNotified -> bluetoothWrapper.executeAuthorisationSequence()
-            BluetoothRepo.Action.AuthorisationComplete -> {
-                Toasty.info(
-                    applicationContext,
-                    "Done"
-                ).show()
-                bluetoothWrapper.startPingHeartRate()
-            }
+            BluetoothRepo.Action.ServicesDiscovered -> notifyAuth()
+            BluetoothRepo.Action.AuthorisationNotified -> bluetoothHandler.executeAuthorisationSequence()
+            BluetoothRepo.Action.AuthorisationComplete -> updateDeviceInfo()
             BluetoothRepo.Action.AuthorisationStepOne -> messageRepo.log("Auth Step One")
             BluetoothRepo.Action.AuthorisationStepTwo -> messageRepo.log("Auth Step Two")
-            BluetoothRepo.Action.AuthorisationFailed -> Toasty.error(
-                applicationContext,
-                "Auth Failed"
-            ).show()
+            BluetoothRepo.Action.AuthorisationFailed -> {
+                // NOOP
+            }
+        }
+    }
+
+    private fun notifyAuth() {
+        scope.launch {
+            bluetoothHandler.notifyAuthorisation()
         }
     }
 
     private fun connectToMac(macAddress: String) {
         scope.launch {
-            bluetoothWrapper.connectToMacInitial(macAddress)
+            bluetoothHandler.connectToMacInitial(macAddress)
         }
     }
 
     private fun checkConnection() {
         scope.launch {
-            bluetoothWrapper.checkConnection()
+            bluetoothHandler.checkConnection()
         }
     }
 
     private fun enableBluetooth() {
         scope.launch {
-            bluetoothWrapper.askToEnableBluetooth(applicationContext)
+            bluetoothHandler.askToEnableBluetooth(applicationContext)
         }
     }
 
     private fun refreshBondedDevices() {
         scope.launch {
-            bluetoothWrapper.getBondedDevices()
+            bluetoothHandler.getBondedDevices()
         }
     }
 
     private fun scanForDevices() {
         scope.launch {
-            bluetoothWrapper.scan(repo.scanStatusLiveData::postValue)
+            bluetoothHandler.scan(repo.scanStatusLiveData::postValue)
+        }
+    }
+
+    private fun updateDeviceInfo() {
+        scope.launch {
+            delay(1_000)
+            bluetoothHandler.refreshDeviceInfo()
         }
     }
 }

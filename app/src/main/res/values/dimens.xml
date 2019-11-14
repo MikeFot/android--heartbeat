@@ -17,4 +17,6 @@
     <dimen name="medium_line_spacing_extra">6sp</dimen>
     <dimen name="text_margin">16dp</dimen>
 
+    <dimen name="dashboard_card_corner">8dp</dimen>
+
 </resources>
