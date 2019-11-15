@@ -13,7 +13,7 @@ import com.michaelfotiadis.heartbeat.core.notification.NotificationChannelInitia
 import com.michaelfotiadis.heartbeat.core.permission.PermissionsHandler
 import com.michaelfotiadis.heartbeat.core.scheduler.ExecutionThreads
 import com.michaelfotiadis.heartbeat.core.toast.ToastShower
-import com.michaelfotiadis.heartbeat.repo.MessageRepo
+import com.michaelfotiadis.heartbeat.repo.message.MessageRepo
 import com.michaelfotiadis.heartbeat.service.BluetoothServiceDispatcher
 import dagger.Module
 import dagger.Provides

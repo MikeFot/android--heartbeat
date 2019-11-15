@@ -6,7 +6,7 @@ import androidx.lifecycle.Transformations
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.michaelfotiadis.heartbeat.core.livedata.SingleLiveEvent
-import com.michaelfotiadis.heartbeat.repo.BluetoothRepo
+import com.michaelfotiadis.heartbeat.repo.bluetooth.BluetoothRepo
 import com.michaelfotiadis.heartbeat.service.BluetoothServiceDispatcher
 import com.michaelfotiadis.heartbeat.ui.main.fragment.bonded.model.UiBondedDevice
 import com.michaelfotiadis.heartbeat.ui.main.fragment.bonded.model.UiBondedDeviceMapper

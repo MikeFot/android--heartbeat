@@ -1,4 +1,4 @@
-package com.michaelfotiadis.heartbeat.repo
+package com.michaelfotiadis.heartbeat.repo.bluetooth
 
 import android.bluetooth.BluetoothAdapter
 import android.content.BroadcastReceiver

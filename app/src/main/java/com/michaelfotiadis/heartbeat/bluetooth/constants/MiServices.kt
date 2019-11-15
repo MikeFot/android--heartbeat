@@ -7,6 +7,7 @@ class MiServices @Inject constructor() {
 
     val genericAccessService = GenericAccessService()
     val authService = AuthService()
+    val deviceInformationService = DeviceInformationService()
     val basicService = BasicService()
     val heartRateService = HeartRateService()
 
@@ -34,6 +35,16 @@ class MiServices @Inject constructor() {
     class BasicService {
         var service: UUID = UUID.fromString("0000fee0-0000-1000-8000-00805f9b34fb")
         var batteryCharacteristic: UUID = UUID.fromString("00000006-0000-3512-2118-0009af100700")
+    }
+
+    class DeviceInformationService {
+        val service: UUID = UUID.fromString("0000180a-0000-1000-8000-00805f9b34fb")
+        var serialNumberCharacteristic: UUID =
+            UUID.fromString("00002a25-0000-1000-8000-00805f9b34fb")
+        var hardwareRevisionCharacteristic: UUID =
+            UUID.fromString("00002a27-0000-1000-8000-00805f9b34fb")
+        var softwareRevisionCharacteristic: UUID =
+            UUID.fromString("00002a28-0000-1000-8000-00805f9b34fb")
     }
 
     class HeartRateService {

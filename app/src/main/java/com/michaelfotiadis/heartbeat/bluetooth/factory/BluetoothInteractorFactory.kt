@@ -13,8 +13,8 @@ import com.michaelfotiadis.heartbeat.bluetooth.interactor.RefreshDeviceInfoInter
 import com.michaelfotiadis.heartbeat.bluetooth.interactor.ScanForDevicesInteractor
 import com.michaelfotiadis.heartbeat.bluetooth.interactor.UpdateCharacteristicInteractor
 import com.michaelfotiadis.heartbeat.core.scheduler.ExecutionThreads
-import com.michaelfotiadis.heartbeat.repo.BluetoothRepo
-import com.michaelfotiadis.heartbeat.repo.MessageRepo
+import com.michaelfotiadis.heartbeat.repo.bluetooth.BluetoothRepo
+import com.michaelfotiadis.heartbeat.repo.message.MessageRepo
 
 class BluetoothInteractorFactory(
     private val bleManager: BleManager,
@@ -49,7 +49,7 @@ class BluetoothInteractorFactory(
     }
 
     val refreshDeviceInfoInteractor: RefreshDeviceInfoInteractor by lazy {
-        RefreshDeviceInfoInteractor(miServices, messageRepo)
+        RefreshDeviceInfoInteractor(miServices, bluetoothRepo, messageRepo)
     }
 
     val updateCharacteristicInteractor: UpdateCharacteristicInteractor by lazy {

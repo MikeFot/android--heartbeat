@@ -3,7 +3,7 @@ package com.michaelfotiadis.heartbeat.bluetooth.interactor
 import android.bluetooth.BluetoothGatt
 import com.michaelfotiadis.heartbeat.bluetooth.constants.MiServices
 import com.michaelfotiadis.heartbeat.core.scheduler.ExecutionThreads
-import com.michaelfotiadis.heartbeat.repo.MessageRepo
+import com.michaelfotiadis.heartbeat.repo.message.MessageRepo
 import io.reactivex.Observable
 import java.util.concurrent.TimeUnit
 

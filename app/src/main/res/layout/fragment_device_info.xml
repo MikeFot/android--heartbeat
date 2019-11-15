@@ -22,13 +22,40 @@
             android:layout_height="wrap_content"
             android:text="Device Name" />
 
-        <TextView
+        <com.michaelfotiadis.heartbeat.ui.view.DotsTextView
             android:id="@+id/info_name_body"
             style="@style/AppTextView.Body"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textColor="@color/secondary_text"
             tools:text="Mitsos" />
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="2dp"
+        android:background="@color/divider" />
+
+    <LinearLayout
+        android:id="@+id/info_mac_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/info_mac_header"
+            style="@style/AppTextView.Header"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Device Address" />
+
+        <com.michaelfotiadis.heartbeat.ui.view.DotsTextView
+            android:id="@+id/info_mac_body"
+            style="@style/AppTextView.Body"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@color/secondary_text"
+            tools:text="FG:56" />
     </LinearLayout>
 
     <View
@@ -63,5 +90,97 @@
         android:layout_width="match_parent"
         android:layout_height="2dp"
         android:background="@color/divider" />
+
+    <LinearLayout
+        android:id="@+id/info_serial_number_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/info_serial_number_header"
+            style="@style/AppTextView.Header"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Serial Number" />
+
+
+        <com.michaelfotiadis.heartbeat.ui.view.DotsTextView
+            android:id="@+id/info_serial_number_body"
+            style="@style/AppTextView.Body"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@color/secondary_text"
+            tools:text="64%" />
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="2dp"
+        android:background="@color/divider" />
+
+    <LinearLayout
+        android:id="@+id/info_software_rev_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/info_software_rev_header"
+            style="@style/AppTextView.Header"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Software Revision" />
+
+
+        <com.michaelfotiadis.heartbeat.ui.view.DotsTextView
+            android:id="@+id/info_software_rev_body"
+            style="@style/AppTextView.Body"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@color/secondary_text"
+            tools:text="64%" />
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="2dp"
+        android:background="@color/divider" />
+
+    <LinearLayout
+        android:id="@+id/info_hardware_rev_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/info_hardware_rev_header"
+            style="@style/AppTextView.Header"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Hardware Revision" />
+
+
+        <com.michaelfotiadis.heartbeat.ui.view.DotsTextView
+            android:id="@+id/info_hardware_rev_body"
+            style="@style/AppTextView.Body"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@color/secondary_text"
+            tools:text="64%" />
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="2dp"
+        android:background="@color/divider" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/info_disconnect_button"
+        style="@style/BorderlessButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="@dimen/margin_16dp"
+        android:text="Disconnect" />
 
 </LinearLayout>

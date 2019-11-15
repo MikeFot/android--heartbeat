@@ -1,34 +1,44 @@
 package com.michaelfotiadis.heartbeat.ui.main.fragment.pair.viewmodel
 
-import androidx.lifecycle.MediatorLiveData
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.LiveDataReactiveStreams
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import com.michaelfotiadis.heartbeat.repo.BluetoothRepo
+import com.michaelfotiadis.heartbeat.repo.bluetooth.BluetoothRepo
+import com.michaelfotiadis.heartbeat.repo.bluetooth.BluetoothRepoAction
 import com.michaelfotiadis.heartbeat.service.BluetoothServiceDispatcher
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.InternalCoroutinesApi
 import javax.inject.Inject
 
+@ExperimentalCoroutinesApi
+@UseExperimental(InternalCoroutinesApi::class)
 class PairDeviceViewModel(
-    private val bluetoothStatusProvider: BluetoothRepo,
+    private val repo: BluetoothRepo,
     private val intentDispatcher: BluetoothServiceDispatcher
 ) : ViewModel() {
 
-    val connectionResultLiveData = MediatorLiveData<Action>().apply {
-        addSource(bluetoothStatusProvider.actionLiveData) { bluetoothAction ->
-            val action = when (bluetoothAction) {
-                BluetoothRepo.Action.Idle -> Action.IDLE
-                BluetoothRepo.Action.Connecting -> Action.CONNECTING
-                is BluetoothRepo.Action.Connected -> Action.CONNECTED
-                is BluetoothRepo.Action.Disconnected -> Action.DISCONNECTED
-                BluetoothRepo.Action.ConnectionFailed -> Action.CONNECTION_FAILED
-                BluetoothRepo.Action.ServicesDiscovered -> Action.SERVICES_DISCOVERED
-                BluetoothRepo.Action.AuthorisationNotified -> Action.AUTH_NOTIFIED
-                BluetoothRepo.Action.AuthorisationStepOne -> Action.AUTH_STEP_ONE
-                BluetoothRepo.Action.AuthorisationStepTwo -> Action.AUTH_STEP_TWO
-                BluetoothRepo.Action.AuthorisationFailed -> Action.AUTH_FAILED
-                BluetoothRepo.Action.AuthorisationComplete -> Action.AUTH_DONE
-            }
-            postValue(action)
-        }.apply { postValue(Action.IDLE) }
+    val connectionResultLiveData: LiveData<Action>
+
+    init {
+        connectionResultLiveData = LiveDataReactiveStreams.fromPublisher(
+            repo.actionAsFlowable()
+                .map { bluetoothAction ->
+                    return@map when (bluetoothAction) {
+                        BluetoothRepoAction.Idle -> Action.IDLE
+                        BluetoothRepoAction.Connecting -> Action.CONNECTING
+                        is BluetoothRepoAction.Connected -> Action.CONNECTED
+                        is BluetoothRepoAction.Disconnected -> Action.DISCONNECTED
+                        BluetoothRepoAction.ConnectionFailed -> Action.CONNECTION_FAILED
+                        BluetoothRepoAction.ServicesDiscovered -> Action.SERVICES_DISCOVERED
+                        BluetoothRepoAction.AuthorisationNotified -> Action.AUTH_NOTIFIED
+                        BluetoothRepoAction.AuthorisationStepOne -> Action.AUTH_STEP_ONE
+                        BluetoothRepoAction.AuthorisationStepTwo -> Action.AUTH_STEP_TWO
+                        BluetoothRepoAction.AuthorisationFailed -> Action.AUTH_FAILED
+                        BluetoothRepoAction.AuthorisationComplete -> Action.AUTH_DONE
+                    }
+                }
+        )
     }
 
     fun connect(macAddress: String) {

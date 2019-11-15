@@ -12,5 +12,6 @@ object BluetoothActions {
     const val ACTION_SCAN_DEVICES = "action.scan_devices"
     const val ACTION_DISCONNECT_DEVICE = "action.disconnect_device"
     const val ACTION_CHECK_CONNECTION = "action.check_connection"
+    const val ACTION_REFRESH_DEVICE_INFO = "action.refresh_device_info"
 
 }

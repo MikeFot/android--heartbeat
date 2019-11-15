@@ -7,12 +7,21 @@ class ReadAuthInteractor(
     private val miServices: MiServices
 ) {
 
-    fun execute(gatt: BluetoothGatt) {
+    fun execute(gatt: BluetoothGatt): Boolean {
         val service = gatt.getService(miServices.authService.service)
-        val characteristic = service.getCharacteristic(
-            miServices.authService.authCharacteristic
-        )
-        gatt.readCharacteristic(characteristic)
+        return if (service != null) {
+            val characteristic = service.getCharacteristic(
+                miServices.authService.authCharacteristic
+            )
+            if (characteristic != null) {
+                gatt.readCharacteristic(characteristic)
+                true
+            } else {
+                false
+            }
+        } else {
+            false
+        }
     }
 
 }

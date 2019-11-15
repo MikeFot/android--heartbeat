@@ -35,20 +35,46 @@ internal class DeviceInfoFragment : BaseNavFragment() {
             viewLifecycleOwner,
             Observer(this::onDeviceInfoChanged)
         )
+        viewModel.disconnectLiveData.observe(
+            viewLifecycleOwner,
+            Observer { moveToStartScreen() }
+        )
 
+        info_disconnect_button.setOnClickListener {
+            viewModel.disconnectFromDevice()
+        }
+
+        viewModel.refreshDeviceInfo()
     }
 
     private fun onDeviceInfoChanged(deviceInfo: DeviceInfo?) {
 
         if (deviceInfo != null) {
             deviceInfo.name?.let { name ->
-                info_name_body.text = name
+                info_name_body.setAndStop(name)
+            }
+            deviceInfo.address?.let { address ->
+                info_mac_body.setAndStop(address)
             }
             deviceInfo.batteryLevel?.let { level ->
                 info_battery_body.setAndStop("$level%")
             }
+            deviceInfo.serialNumber?.let { serialNumber ->
+                info_serial_number_body.setAndStop(serialNumber)
+            }
+            deviceInfo.softwareRevision?.let { rev ->
+                info_software_rev_body.setAndStop(rev)
+            }
+            deviceInfo.hardwareRevision?.let { rev ->
+                info_hardware_rev_body.setAndStop(rev)
+            }
         }
+    }
 
+    private fun moveToStartScreen() {
+        navController.navigate(
+            DeviceInfoFragmentDirections.actionDeviceInfoFragmentToBluetoothActivationFragment()
+        )
     }
 
 }

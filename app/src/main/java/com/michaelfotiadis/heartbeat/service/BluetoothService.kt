@@ -10,14 +10,13 @@ import androidx.lifecycle.Observer
 import com.michaelfotiadis.heartbeat.R
 import com.michaelfotiadis.heartbeat.bluetooth.BluetoothHandler
 import com.michaelfotiadis.heartbeat.bluetooth.model.HeartRateStatus
-import com.michaelfotiadis.heartbeat.repo.BluetoothRepo
-import com.michaelfotiadis.heartbeat.repo.MessageRepo
+import com.michaelfotiadis.heartbeat.repo.bluetooth.BluetoothRepo
+import com.michaelfotiadis.heartbeat.repo.bluetooth.BluetoothRepoAction
+import com.michaelfotiadis.heartbeat.repo.message.MessageRepo
 import dagger.android.AndroidInjection
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -51,16 +50,12 @@ class BluetoothService : LifecycleService() {
             notificationFactory.getServiceStartedNotification()
         )
 
-        repo.actionLiveData.observe(this, Observer(this@BluetoothService::processRepoAction))
+        repo.actionAsLiveData().observe(this, Observer(this@BluetoothService::processRepoAction))
 
         repo.bluetoothConnectionLiveData.observe(
             this,
             Observer(this@BluetoothService::onBluetoothStateUpdated)
         )
-
-        repo.deviceInfoLiveData.observe(this, Observer { deviceInfo ->
-            messageRepo.log("Device Info $deviceInfo")
-        })
     }
 
     private fun onBluetoothStateUpdated(isEnabled: Boolean) {
@@ -86,20 +81,15 @@ class BluetoothService : LifecycleService() {
     }
 
     override fun onDestroy() {
-        disconnectDevice()
         bluetoothHandler.cleanup()
-        try {
-            scope.cancel()
-        } catch (exception: CancellationException) {
-            messageRepo.logError(exception.message ?: "ERROR")
-        }
+        scope.cancel()
         super.onDestroy()
     }
 
     private fun disconnectDevice() {
-        bluetoothHandler.cancelScan()
-        bluetoothHandler.stopPingHeartRate()
-        bluetoothHandler.disconnect()
+        scope.launch {
+            bluetoothHandler.disconnect(true)
+        }
     }
 
     override fun onBind(intent: Intent): IBinder {
@@ -130,6 +120,7 @@ class BluetoothService : LifecycleService() {
             BluetoothActions.ACTION_SCAN_DEVICES -> scanForDevices()
             BluetoothActions.ACTION_DISCONNECT_DEVICE -> disconnectDevice()
             BluetoothActions.ACTION_CHECK_CONNECTION -> checkConnection()
+            BluetoothActions.ACTION_REFRESH_DEVICE_INFO -> refreshDeviceInfo()
         }
         return super.onStartCommand(intent, flags, startId)
     }
@@ -155,30 +146,30 @@ class BluetoothService : LifecycleService() {
         }
     }
 
-    private fun processRepoAction(action: BluetoothRepo.Action?) {
+    private fun processRepoAction(action: BluetoothRepoAction?) {
         when (action) {
-            BluetoothRepo.Action.Idle -> {
+            BluetoothRepoAction.Idle -> {
                 // NOOP
             }
-            is BluetoothRepo.Action.Connected -> {
+            is BluetoothRepoAction.Connected -> {
                 updateNotification(
-                    notificationFactory.getConnectedToDevice(action.name)
+                    notificationFactory.getConnectedToDevice(action.name ?: "")
                 )
                 bluetoothHandler.discoverServices()
             }
-            is BluetoothRepo.Action.Disconnected -> {
+            is BluetoothRepoAction.Disconnected -> {
                 updateNotification(
-                    notificationFactory.getDisconnectedFromDevice(action.name)
+                    notificationFactory.getDisconnectedFromDevice(action.name ?: "")
                 )
                 bluetoothHandler.stopPingHeartRate()
             }
-            BluetoothRepo.Action.ConnectionFailed -> messageRepo.logError("Connection Failed")
-            BluetoothRepo.Action.ServicesDiscovered -> notifyAuth()
-            BluetoothRepo.Action.AuthorisationNotified -> bluetoothHandler.executeAuthorisationSequence()
-            BluetoothRepo.Action.AuthorisationComplete -> updateDeviceInfo()
-            BluetoothRepo.Action.AuthorisationStepOne -> messageRepo.log("Auth Step One")
-            BluetoothRepo.Action.AuthorisationStepTwo -> messageRepo.log("Auth Step Two")
-            BluetoothRepo.Action.AuthorisationFailed -> {
+            BluetoothRepoAction.ConnectionFailed -> messageRepo.logError("Connection Failed")
+            BluetoothRepoAction.ServicesDiscovered -> notifyAuth()
+            BluetoothRepoAction.AuthorisationNotified -> bluetoothHandler.executeAuthorisationSequence()
+            BluetoothRepoAction.AuthorisationComplete -> messageRepo.log("Auth Complete")
+            BluetoothRepoAction.AuthorisationStepOne -> messageRepo.log("Auth Step One")
+            BluetoothRepoAction.AuthorisationStepTwo -> messageRepo.log("Auth Step Two")
+            BluetoothRepoAction.AuthorisationFailed -> {
                 // NOOP
             }
         }
@@ -220,9 +211,8 @@ class BluetoothService : LifecycleService() {
         }
     }
 
-    private fun updateDeviceInfo() {
+    private fun refreshDeviceInfo() {
         scope.launch {
-            delay(1_000)
             bluetoothHandler.refreshDeviceInfo()
         }
     }

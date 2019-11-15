@@ -4,22 +4,27 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.Transformations
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import com.michaelfotiadis.heartbeat.repo.BluetoothRepo
+import com.michaelfotiadis.heartbeat.repo.bluetooth.BluetoothRepo
 import com.michaelfotiadis.heartbeat.service.BluetoothServiceDispatcher
 import javax.inject.Inject
 
 class BluetoothActivationViewModel(
-    bluetoothStatusProvider: BluetoothRepo,
+    private val repo: BluetoothRepo,
     private val intentDispatcher: BluetoothServiceDispatcher
 ) : ViewModel() {
 
     val actionLiveData: LiveData<Action> = Transformations.map(
-        bluetoothStatusProvider.bluetoothConnectionLiveData
+        repo.bluetoothConnectionLiveData
     ) { enabled ->
         if (enabled) {
-            Action.MOVE_TO_NEXT
+            val storedMac = repo.connectedMacAddress
+            if (storedMac.isNullOrBlank()) {
+                Action.MoveToBondedDevices
+            } else {
+                Action.MoveToPair(storedMac)
+            }
         } else {
-            Action.BLUETOOTH_UNAVAILABLE
+            Action.BluetoothUnavailable
         }
     }
 
@@ -32,9 +37,10 @@ class BluetoothActivationViewModel(
     }
 }
 
-enum class Action {
-    BLUETOOTH_UNAVAILABLE,
-    MOVE_TO_NEXT
+sealed class Action {
+    object BluetoothUnavailable : Action()
+    object MoveToBondedDevices : Action()
+    data class MoveToPair(val mac: String) : Action()
 }
 
 class BluetoothActivationViewModelFactory @Inject constructor(

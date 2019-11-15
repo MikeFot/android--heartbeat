@@ -4,7 +4,7 @@ import android.annotation.SuppressLint
 import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCharacteristic
 import com.michaelfotiadis.heartbeat.bluetooth.constants.MiServices
-import com.michaelfotiadis.heartbeat.repo.MessageRepo
+import com.michaelfotiadis.heartbeat.repo.message.MessageRepo
 import javax.crypto.Cipher
 import javax.crypto.spec.SecretKeySpec
 

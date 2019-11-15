@@ -6,7 +6,7 @@ import com.clj.fastble.data.BleDevice
 import com.michaelfotiadis.heartbeat.bluetooth.model.DeviceResult
 import com.michaelfotiadis.heartbeat.bluetooth.model.ScanStatus
 import com.michaelfotiadis.heartbeat.core.scheduler.ExecutionThreads
-import com.michaelfotiadis.heartbeat.repo.MessageRepo
+import com.michaelfotiadis.heartbeat.repo.message.MessageRepo
 import io.reactivex.Observable
 import org.reactivestreams.Subscriber
 

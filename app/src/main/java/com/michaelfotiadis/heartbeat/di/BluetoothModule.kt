@@ -8,8 +8,8 @@ import com.michaelfotiadis.heartbeat.bluetooth.BluetoothHandler
 import com.michaelfotiadis.heartbeat.bluetooth.constants.MiServices
 import com.michaelfotiadis.heartbeat.bluetooth.factory.BluetoothInteractorFactory
 import com.michaelfotiadis.heartbeat.core.scheduler.ExecutionThreads
-import com.michaelfotiadis.heartbeat.repo.BluetoothRepo
-import com.michaelfotiadis.heartbeat.repo.MessageRepo
+import com.michaelfotiadis.heartbeat.repo.bluetooth.BluetoothRepo
+import com.michaelfotiadis.heartbeat.repo.message.MessageRepo
 import dagger.Module
 import dagger.Provides
 import java.util.concurrent.TimeUnit
@@ -20,8 +20,8 @@ internal class BluetoothModule {
 
     @Provides
     @Singleton
-    fun providesMessageRepo(executionThreads: ExecutionThreads): MessageRepo {
-        return MessageRepo(executionThreads)
+    fun providesMessageRepo(): MessageRepo {
+        return MessageRepo()
     }
 
     @Provides
@@ -75,7 +75,7 @@ internal class BluetoothModule {
 
     @Provides
     @Singleton
-    fun providesBluetoothStatusProvider(executionThreads: ExecutionThreads): BluetoothRepo {
-        return BluetoothRepo(executionThreads)
+    fun providesBluetoothStatusProvider(): BluetoothRepo {
+        return BluetoothRepo()
     }
 }

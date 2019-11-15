@@ -9,7 +9,7 @@ import com.michaelfotiadis.heartbeat.core.features.FeatureFlagProvider
 import com.michaelfotiadis.heartbeat.core.logger.AppLogger
 import com.michaelfotiadis.heartbeat.core.notification.NotificationChannelInitializer
 import com.michaelfotiadis.heartbeat.core.toast.ToastShower
-import com.michaelfotiadis.heartbeat.repo.MessageRepo
+import com.michaelfotiadis.heartbeat.repo.message.MessageRepo
 import java.util.concurrent.atomic.AtomicBoolean
 
 private const val TAG = "BLE"
@@ -54,10 +54,10 @@ class AppInitializer(
     }
 
     private fun observeMessages() {
-        messageRepo.messageLiveData.observe(ProcessLifecycleOwner.get(), Observer { message ->
+        messageRepo.getMessageLiveData().observe(ProcessLifecycleOwner.get(), Observer { message ->
             appLogger.get(TAG).d(message)
         })
-        messageRepo.errorLiveData.observe(ProcessLifecycleOwner.get(), Observer { message ->
+        messageRepo.getErrorLiveData().observe(ProcessLifecycleOwner.get(), Observer { message ->
             appLogger.get(TAG).e(message)
         })
     }

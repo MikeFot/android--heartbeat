@@ -15,6 +15,9 @@
             app:destination="@id/bondedDevicesFragment"
             app:popUpTo="@id/bluetoothActivationFragment"
             app:popUpToInclusive="true" />
+        <action
+            android:id="@+id/action_bluetoothActivationFragment_to_pairDeviceFragment"
+            app:destination="@id/pairDeviceFragment" />
     </fragment>
 
     <fragment
@@ -93,6 +96,13 @@
         android:id="@+id/deviceInfoFragment"
         android:name="com.michaelfotiadis.heartbeat.ui.main.fragment.info.DeviceInfoFragment"
         android:label="Device Information"
-        tools:layout="@layout/fragment_device_info" />
+        tools:layout="@layout/fragment_device_info">
+        <action
+            android:id="@+id/action_deviceInfoFragment_to_bluetoothActivationFragment"
+            app:destination="@id/bluetoothActivationFragment"
+            app:launchSingleTop="true"
+            app:popUpTo="@id/nav_main"
+            app:popUpToInclusive="true" />
+    </fragment>
 
 </navigation>

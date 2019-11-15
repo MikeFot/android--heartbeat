@@ -16,8 +16,9 @@ import com.michaelfotiadis.heartbeat.bluetooth.factory.BluetoothInteractorFactor
 import com.michaelfotiadis.heartbeat.bluetooth.interactor.Cancellable
 import com.michaelfotiadis.heartbeat.bluetooth.interactor.ExecuteAuthSequenceInteractor
 import com.michaelfotiadis.heartbeat.bluetooth.model.ScanStatus
-import com.michaelfotiadis.heartbeat.repo.BluetoothRepo
-import com.michaelfotiadis.heartbeat.repo.MessageRepo
+import com.michaelfotiadis.heartbeat.repo.bluetooth.BluetoothRepo
+import com.michaelfotiadis.heartbeat.repo.bluetooth.BluetoothRepoAction
+import com.michaelfotiadis.heartbeat.repo.message.MessageRepo
 import java.util.*
 
 class BluetoothHandler(
@@ -50,12 +51,12 @@ class BluetoothHandler(
         messageRepo.log("New State $newState")
         when (newState) {
             BluetoothGatt.STATE_CONNECTING ->
-                bluetoothRepo.postAction(BluetoothRepo.Action.Connecting)
+                bluetoothRepo.postAction(BluetoothRepoAction.Connecting)
             BluetoothGatt.STATE_CONNECTED -> {
                 messageRepo.log("Connected")
                 bluetoothRepo.postAction(
-                    BluetoothRepo.Action.Connected(
-                        gatt.device.name
+                    BluetoothRepoAction.Connected(
+                        gatt.device.name ?: "UNKNOWN"
                     )
                 )
                 getConnectedDevice()?.let { device ->
@@ -65,19 +66,21 @@ class BluetoothHandler(
             }
             BluetoothGatt.STATE_DISCONNECTED -> {
                 messageRepo.log("Disconnected")
-                bluetoothRepo.connectedMacAddress = null
                 bluetoothRepo.postAction(
-                    BluetoothRepo.Action.Disconnected(
-                        gatt.device.name
-                    )
+                    BluetoothRepoAction.Disconnected(gatt.device.name ?: "UNKNOWN")
                 )
+
                 getConnectedDevice()?.let(bleServer::cancelConnection)
             }
         }
     }
 
     private fun getConnectedDevice(): BluetoothDevice? {
-        return bluetoothManager.adapter.getRemoteDevice(bluetoothRepo.connectedMacAddress)
+        return if (bluetoothRepo.connectedMacAddress.isNullOrBlank()) {
+            null
+        } else {
+            bluetoothManager.adapter.getRemoteDevice(bluetoothRepo.connectedMacAddress)
+        }
     }
 
     fun discoverServices() {
@@ -87,10 +90,15 @@ class BluetoothHandler(
     fun notifyAuthorisation() {
         val gatt = bluetoothGatt
         if (gatt != null) {
-            factory.readAuthInteractor.execute(gatt)
+            val canAuthorise = factory.readAuthInteractor.execute(gatt)
+            if (!canAuthorise) {
+                messageRepo.logError("Auth Service unavailable")
+                bluetoothRepo.connectedMacAddress = null
+                bluetoothRepo.postAction(BluetoothRepoAction.AuthorisationFailed)
+            }
         } else {
             messageRepo.logError("GATT IS NULL!")
-            bluetoothRepo.postAction(BluetoothRepo.Action.Disconnected(""))
+            bluetoothRepo.postAction(BluetoothRepoAction.Disconnected(""))
         }
     }
 
@@ -100,15 +108,15 @@ class BluetoothHandler(
             messageRepo.log("Executing authorisation")
             factory.executeAuthSequenceInteractor.execute(gatt).also { result ->
                 val action = when (result) {
-                    ExecuteAuthSequenceInteractor.Result.STEP_1 -> BluetoothRepo.Action.AuthorisationStepOne
-                    ExecuteAuthSequenceInteractor.Result.STEP_2 -> BluetoothRepo.Action.AuthorisationStepTwo
-                    ExecuteAuthSequenceInteractor.Result.DONE -> BluetoothRepo.Action.AuthorisationComplete
-                    ExecuteAuthSequenceInteractor.Result.ERROR -> BluetoothRepo.Action.AuthorisationFailed
+                    ExecuteAuthSequenceInteractor.Result.STEP_1 -> BluetoothRepoAction.AuthorisationStepOne
+                    ExecuteAuthSequenceInteractor.Result.STEP_2 -> BluetoothRepoAction.AuthorisationStepTwo
+                    ExecuteAuthSequenceInteractor.Result.DONE -> BluetoothRepoAction.AuthorisationComplete
+                    ExecuteAuthSequenceInteractor.Result.ERROR -> BluetoothRepoAction.AuthorisationFailed
                 }
                 bluetoothRepo.postAction(action)
             }
         } else {
-            bluetoothRepo.postAction(BluetoothRepo.Action.Disconnected(""))
+            bluetoothRepo.postAction(BluetoothRepoAction.Disconnected(""))
         }
     }
 
@@ -133,9 +141,9 @@ class BluetoothHandler(
 
     fun connectToMacInitial(macAddress: String) {
         stopOperations()
-        disconnect()
+        disconnect(false)
         messageRepo.log("Attempting connection to mac $macAddress")
-        bluetoothRepo.postAction(BluetoothRepo.Action.Idle)
+        bluetoothRepo.postAction(BluetoothRepoAction.Idle)
         try {
             val device = bluetoothManager.adapter.getRemoteDevice(macAddress)
             if (device.bondState == BluetoothDevice.BOND_NONE) {
@@ -148,7 +156,7 @@ class BluetoothHandler(
             bluetoothGatt = device.connectGatt(context, true, callback)
         } catch (exception: IllegalArgumentException) {
             messageRepo.logError("Exception connecting")
-            bluetoothRepo.postAction(BluetoothRepo.Action.ConnectionFailed)
+            bluetoothRepo.postAction(BluetoothRepoAction.ConnectionFailed)
         }
     }
 
@@ -191,15 +199,17 @@ class BluetoothHandler(
         heartRateOperation = null
     }
 
-    fun disconnect() {
-        messageRepo.log("Disconnecting")
+    fun disconnect(forget: Boolean) {
+        if (forget) {
+            bluetoothRepo.connectedMacAddress = null
+        }
         bluetoothGatt?.disconnect()
-        bluetoothGatt = null
         stopOperations()
+        messageRepo.log("Disconnected $forget")
     }
 
     private fun stopOperations() {
-        messageRepo.log("Stopping Operations")
+        messageRepo.log("Stopping ${operations.size} Operations")
         operations.forEach { cancellable -> cancellable.cancel() }
         operations.clear()
         factory.cleanupBluetoothOnInteractor.execute()
@@ -207,9 +217,9 @@ class BluetoothHandler(
 
     fun cleanup() {
         messageRepo.log("Cleanup")
+        disconnect(false)
         bluetoothGatt?.close()
         bleServer.close()
-        stopOperations()
     }
 
     private fun register(cancellable: Cancellable) {
@@ -227,7 +237,7 @@ class BluetoothHandler(
             when (characteristic.uuid.toString()) {
                 UUIDs.CUSTOM_SERVICE_AUTH_CHARACTERISTIC_STRING -> {
                     messageRepo.log("AUTH characteristic changed '${characteristic.value}'")
-                    bluetoothRepo.postAction(BluetoothRepo.Action.AuthorisationNotified)
+                    bluetoothRepo.postAction(BluetoothRepoAction.AuthorisationNotified)
                 }
             }
             factory.updateCharacteristicInteractor.execute(characteristic)
@@ -274,7 +284,7 @@ class BluetoothHandler(
         override fun onServicesDiscovered(gatt: BluetoothGatt, status: Int) {
             super.onServicesDiscovered(gatt, status)
             messageRepo.log("On Services Discovered")
-            bluetoothRepo.postAction(BluetoothRepo.Action.ServicesDiscovered)
+            bluetoothRepo.postAction(BluetoothRepoAction.ServicesDiscovered)
         }
     }
 }

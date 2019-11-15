@@ -24,31 +24,19 @@ class BluetoothServiceDispatcher(context: Context) {
     }
 
     fun stopService() {
-        getDefaultIntent().also { intent ->
-            intent.action = BluetoothActions.ACTION_STOP
-            applicationContext.startService(intent)
-        }
+        applicationContext.startService(getIntentWithAction(BluetoothActions.ACTION_STOP))
     }
 
     fun refreshBondedDevices() {
-        getDefaultIntent().also { intent ->
-            intent.action = BluetoothActions.ACTION_REFRESH_BONDED_DEVICES
-            applicationContext.startService(intent)
-        }
+        applicationContext.startService(getIntentWithAction(BluetoothActions.ACTION_REFRESH_BONDED_DEVICES))
     }
 
     fun checkConnection() {
-        getDefaultIntent().also { intent ->
-            intent.action = BluetoothActions.ACTION_CHECK_CONNECTION
-            applicationContext.startService(intent)
-        }
+        applicationContext.startService(getIntentWithAction(BluetoothActions.ACTION_CHECK_CONNECTION))
     }
 
     fun askToEnableBluetooth() {
-        getDefaultIntent().also { intent ->
-            intent.action = BluetoothActions.ACTION_ENABLE_BLUETOOTH
-            applicationContext.startService(intent)
-        }
+        applicationContext.startService(getIntentWithAction(BluetoothActions.ACTION_ENABLE_BLUETOOTH))
     }
 
     fun connectToMacAddress(mac: String) {
@@ -60,32 +48,28 @@ class BluetoothServiceDispatcher(context: Context) {
     }
 
     fun authorise() {
-        getDefaultIntent().also { intent ->
-            intent.action = BluetoothActions.ACTION_AUTHORISE
-            applicationContext.startService(intent)
-        }
+        applicationContext.startService(getIntentWithAction(BluetoothActions.ACTION_AUTHORISE))
     }
 
     fun checkHeartRate() {
-        getDefaultIntent().also { intent ->
-            intent.action = BluetoothActions.ACTION_CHECK_HEART_SERVICE
-            applicationContext.startService(intent)
-        }
+        applicationContext.startService(getIntentWithAction(BluetoothActions.ACTION_CHECK_HEART_SERVICE))
     }
 
     fun scanForDevices() {
-        getDefaultIntent().also { intent ->
-            intent.action = BluetoothActions.ACTION_SCAN_DEVICES
-            applicationContext.startService(intent)
-        }
+        applicationContext.startService(getIntentWithAction(BluetoothActions.ACTION_SCAN_DEVICES))
     }
 
     fun disconnectDevice() {
-        getDefaultIntent().also { intent ->
-            intent.action = BluetoothActions.ACTION_DISCONNECT_DEVICE
-            applicationContext.startService(intent)
-        }
+        applicationContext.startService(getIntentWithAction(BluetoothActions.ACTION_DISCONNECT_DEVICE))
+    }
+
+    fun refreshDeviceInfo() {
+        applicationContext.startService(getIntentWithAction(BluetoothActions.ACTION_REFRESH_DEVICE_INFO))
     }
 
     private fun getDefaultIntent() = Intent(applicationContext, BluetoothService::class.java)
+
+    private fun getIntentWithAction(action: String) = getDefaultIntent().apply {
+        this.action = action
+    }
 }

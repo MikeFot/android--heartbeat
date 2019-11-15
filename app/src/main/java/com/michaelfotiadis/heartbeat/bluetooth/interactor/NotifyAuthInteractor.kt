@@ -3,7 +3,7 @@ package com.michaelfotiadis.heartbeat.bluetooth.interactor
 import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattDescriptor
 import com.michaelfotiadis.heartbeat.bluetooth.constants.MiServices
-import com.michaelfotiadis.heartbeat.repo.MessageRepo
+import com.michaelfotiadis.heartbeat.repo.message.MessageRepo
 
 class NotifyAuthInteractor(
     private val miServices: MiServices,

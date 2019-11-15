@@ -49,15 +49,22 @@ internal class BluetoothActivationFragment : BaseNavFragment() {
 
     private fun processAction(action: Action?) {
         when (action) {
-            Action.MOVE_TO_NEXT -> moveToNext()
-            Action.BLUETOOTH_UNAVAILABLE -> bluetooth_activate_button.isEnabled = true
+            Action.MoveToBondedDevices -> moveToBondedDevices()
+            Action.BluetoothUnavailable -> bluetooth_activate_button.isEnabled = true
+            is Action.MoveToPair -> moveToPair(action.mac)
             null -> bluetooth_activate_button.isEnabled = false
         }
     }
 
-    private fun moveToNext() {
+    private fun moveToBondedDevices() {
         navController.navigate(
             BluetoothActivationFragmentDirections.actionBluetoothActivationFragmentToBondedDevicesFragment()
+        )
+    }
+
+    private fun moveToPair(mac: String) {
+        navController.navigate(
+            BluetoothActivationFragmentDirections.actionBluetoothActivationFragmentToPairDeviceFragment(mac)
         )
     }
 }
